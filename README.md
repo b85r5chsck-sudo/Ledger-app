@@ -1,4 +1,6 @@
-# Kitchen Ledger app
+# Ledger-app
+
+Ledger for kitchens: stock ordering, batch recipes, menu items and suppliers.
 
 Installable, offline-capable version of the kitchen ledger (from Drive "Project Ledger" V1.0.13).
 
