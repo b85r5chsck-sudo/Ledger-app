@@ -83,15 +83,17 @@ fs.writeFileSync(path.join(out, "manifest.webmanifest"), JSON.stringify({
 
 for (const f of icons) fs.copyFileSync(path.join(clientDir, f), path.join(out, "icons", f));
 
-// The release id is a hash of everything the worker caches, so any change to
-// the page, settings or icons makes a new worker and devices update.
-const hash = require("crypto").createHash("sha256");
-for (const f of ["index.html", "client-config.js", "manifest.webmanifest", ...icons.map(i => "icons/" + i)]) {
-  hash.update(f + "\0"); hash.update(fs.readFileSync(path.join(out, f)));
+// Each cached file's SHA-256 goes into the worker, and the release id is a
+// hash of all of them, so any change makes a new worker and devices update.
+const crypto = require("crypto");
+const sha = buf => crypto.createHash("sha256").update(buf).digest("hex");
+const assets = {};
+for (const [url, f] of [["./", "index.html"], ["./client-config.js", "client-config.js"],
+  ["./manifest.webmanifest", "manifest.webmanifest"], ...icons.map(i => ["./icons/" + i, "icons/" + i])]) {
+  assets[url] = sha(fs.readFileSync(path.join(out, f)));
 }
 const swSource = fs.readFileSync(path.join(root, "sw.js"), "utf8");
-hash.update(swSource);
-const buildId = `${client}-${hash.digest("hex").slice(0, 16)}`;
-fs.writeFileSync(path.join(out, "sw.js"), swSource.replace(/__BUILD_ID__/g, () => buildId));
+const buildId = `${client}-${sha(JSON.stringify(assets) + swSource).slice(0, 16)}`;
+fs.writeFileSync(path.join(out, "sw.js"), swSource.replace(/__BUILD_ID__/g, () => buildId).replace(/__ASSETS__/g, () => JSON.stringify(assets, null, 2)));
 
 console.log(`Built "${cfg.appName}" (${client}) into dist/  [${buildId}]`);
