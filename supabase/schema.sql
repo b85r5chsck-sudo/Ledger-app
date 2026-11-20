@@ -29,15 +29,20 @@ begin
   perform pg_advisory_xact_lock(hashtext('ledger_records:' || coalesce(auth.uid()::text, '')));
   new.owner := auth.uid();
   -- A deletion is final: an upload that would bring a deleted record back
-  -- (from a device that hadn't heard of the deletion yet) keeps it deleted,
-  -- as it was. The new number makes every device fetch the deletion again.
+  -- (from a device that hadn't heard of the deletion yet) keeps it deleted.
+  -- A second deletion only adds the version it had to "seen".
+  -- The new number makes every device fetch the deletion again.
   if tg_op = 'UPDATE' and old.deleted then
-    new.data := old.data; new.fp := old.fp; new.deleted := true;
-  -- When a live record is deleted, note the server's own last version of it
-  -- ("was"), so a device meeting the online copy for the first time can tell
-  -- an untouched old copy of it from a different record with the same name.
+    new.data := coalesce(old.data, '{}'::jsonb) || jsonb_build_object('seen',
+      coalesce(old.data->'seen', '[]'::jsonb) || case when new.deleted then coalesce(new.data->'seen', '[]'::jsonb) else '[]'::jsonb end);
+    new.fp := old.fp; new.deleted := true;
+  -- When a live record is deleted, keep the server's own last version of it
+  -- ("last" and its fingerprint "was"). With the versions the deleting devices
+  -- had ("seen", added to by every later deletion), a device meeting the
+  -- online copy for the first time can tell an untouched old copy of it from
+  -- a different record with the same name.
   elsif tg_op = 'UPDATE' and new.deleted then
-    new.data := coalesce(new.data, '{}'::jsonb) || jsonb_build_object('was', old.fp);
+    new.data := coalesce(new.data, '{}'::jsonb) || jsonb_build_object('was', old.fp, 'last', old.data);
   end if;
   new.rev := nextval('public.ledger_records_rev_seq');
   new.updated_at := now();

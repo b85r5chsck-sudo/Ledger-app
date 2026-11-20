@@ -112,13 +112,26 @@
         // a deleted one only when this is exactly the copy that was deleted,
         // so a different record that happens to share the name is never lost
         if (!free.length) free = (gone[kind + "|" + nk] || []).filter(function (t) {
-          return !used[kind + ":" + t.id] && t.fps.indexOf(fp = fp || fpOf(data)) >= 0;
+          return !used[kind + ":" + t.id] && t.fp === (fp = fp || fpOf(data));
         }).map(function (t) { return t.id; });
         o.cloudId = free[0] || newId(kind);
         used[kind + ":" + o.cloudId] = true; changed = true;
       });
     });
     return changed;
+  }
+
+  // The versions a deleted record is known to have had, as { nk, fp } pairs:
+  // the server's last live version ("last"/"was", stamped by the database)
+  // and the version each deleting device had ("seen").
+  function deletedVersions(kind, d) {
+    var out = [];
+    if (!d || typeof d !== "object") return out;
+    if (d.last && d.was) { try { out.push({ nk: NAMEKEY[kind](d.last), fp: d.was }); } catch (e) {} }
+    (Array.isArray(d.seen) ? d.seen : []).forEach(function (v) { if (v && v.nk && v.fp) out.push({ nk: v.nk, fp: v.fp }); });
+    if (d.nk && typeof d.was === "string") out.push({ nk: d.nk, fp: d.was });   // earlier test rows
+    if (d.nk && typeof d.seen === "string") out.push({ nk: d.nk, fp: d.seen });
+    return out;
   }
 
   // ---------- applying an online record here ----------
@@ -245,7 +258,7 @@
   }
 
   // ---------- one sync ----------
-  var running = null, queued = null, status = { state: "idle", at: null, error: "" };
+  var running = null, queued = null, rejectRetried = false, status = { state: "idle", at: null, error: "" };
   var APPLY_ORDER = { item: 0, supplier: 1, recipe: 2, order: 3 };
 
   // This device's ledger belongs to one online account. Another account's
@@ -276,12 +289,14 @@
       var live = {}, gone = {};
       rows.forEach(function (r) {
         if (r.kind === "order" || !NAMEKEY[r.kind]) return;
-        var nk = r.deleted ? (r.data && r.data.nk) : (r.data ? NAMEKEY[r.kind](r.data) : null);
-        if (!nk || (r.deleted && !firstMeeting)) return;
-        var k = r.kind + "|" + nk;
-        // was: the server's last version; seen: the version the deleting device had
-        if (r.deleted) { if (r.data.was || r.data.seen) (gone[k] = gone[k] || []).push({ id: r.key, fps: [r.data.was, r.data.seen] }); }
-        else (live[k] = live[k] || []).push(r.key);
+        if (r.deleted) {
+          if (firstMeeting) deletedVersions(r.kind, r.data).forEach(function (v) {
+            var k = r.kind + "|" + v.nk; (gone[k] = gone[k] || []).push({ id: r.key, fp: v.fp });
+          });
+          return;
+        }
+        var nk = r.data ? NAMEKEY[r.kind](r.data) : null;
+        if (nk) (live[r.kind + "|" + nk] = live[r.kind + "|" + nk] || []).push(r.key);
       });
       if (giveIds(live, gone)) changed = true;
       var local = snapshot(), base = m.base, maxRev = m.lastRev;
@@ -293,7 +308,8 @@
         .forEach(function (k) {
           var r = latest[k], b = base[k], l = local[k];
           var rfp = r.deleted ? "deleted" : r.fp, bfp = b ? (b.deleted ? "deleted" : b.fp) : null;
-          if (rfp === bfp) return; // nothing new online
+          // nothing new online (but a deletion still applies to a record brought back here, e.g. by Undo)
+          if (rfp === bfp && !(r.deleted && l)) return;
           if (r.deleted) { // a deletion wins over an edit made here
             if (l) { applyRemote(r, l); applied++; }
             base[k] = { fp: "deleted", nk: (r.data && r.data.nk) || (b && b.nk) || (l && l.nk) || null, deleted: true };
@@ -320,14 +336,17 @@
         var b = base[k]; if (b.deleted || now[k]) return;
         var kind = k.slice(0, k.indexOf(":")), id = k.slice(k.indexOf(":") + 1);
         out.push({ k: k, nb: { fp: "deleted", nk: b.nk || null, deleted: true },
-          row: { kind: kind, key: id, data: b.nk ? { nk: b.nk, was: b.fp, seen: b.fp } : null, fp: "deleted", deleted: true, updated_by: computer() } });
+          row: { kind: kind, key: id, data: b.nk ? { nk: b.nk, seen: [{ nk: b.nk, fp: b.fp }] } : null, fp: "deleted", deleted: true, updated_by: computer() } });
       });
       sent = out.length;
       if (out.length) changed = true;
       return push(out, base, g, info);
     }).then(function () {
-      if (info.rejected) {
-        // edits to records deleted elsewhere: say so, and fetch the deletions now
+      var retry = info.rejected && !rejectRetried;
+      rejectRetried = !!info.rejected;
+      if (info.rejected && !retry) { setStatus("error", "The online copy kept " + info.rejected + " deletion" + (info.rejected === 1 ? "" : "s") + " over changes made here"); return; }
+      if (retry) {
+        // edits to records deleted elsewhere: say so, and fetch the deletions now (once)
         if (typeof toast === "function") toast("Online copy: " + info.rejected + " change" + (info.rejected === 1 ? " was" : "s were") + " not kept because " + (info.rejected === 1 ? "that record was" : "those records were") + " deleted on another device");
         setTimeout(syncOnce, 0);
       }
