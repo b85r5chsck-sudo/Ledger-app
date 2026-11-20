@@ -1,10 +1,12 @@
-// Bump CACHE_VERSION on every release so devices pick up the new files.
-const CACHE_VERSION = "ledger-v1.0.13";
+// __BUILD_ID__ is replaced by scripts/build.js on every build, so devices
+// always pick up a new release.
+const CACHE_VERSION = "ledger-__BUILD_ID__";
 
 const APP_FILES = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./client-config.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"
