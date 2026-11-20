@@ -11229,9 +11229,6 @@ function runImportFromBackup(parsed){
   if(pm && pm.batchCodeNext > (state.meta.batchCodeNext || 0)) state.meta.batchCodeNext = pm.batchCodeNext;
   if(pm && pm.menuCodeNext > (state.meta.menuCodeNext || 0)) state.meta.menuCodeNext = pm.menuCodeNext; // 1.0.4
   var suppliersResult = mergeBackupSuppliers(parsed.suppliers); // 1.0.6 — before items, so items find their supplier
-  // items and orders spelled like the supplier they were matched to here (CHEQUERS_KITCHEN -> CHEQUERS.KITCHEN)
-  var spell = function(x){ if(x && typeof x.supplier === "string"){ var to = suppliersResult.names[ledgerSupplierKey(x.supplier)]; if(to && to !== x.supplier) x.supplier = to; } };
-  (parsed.items || []).forEach(spell); (Array.isArray(parsed.orders) ? parsed.orders : []).forEach(spell);
   var itemsById = {};
   (parsed.items||[]).forEach(function(i){ itemsById[i.id]=i; });
   var genericItems = (parsed.items||[]).map(function(i){ return i; });
@@ -11307,15 +11304,14 @@ function runImportFromBackup(parsed){
 // after the usual redirects) gets the backup's filled-in details; one that
 // isn't here is added, unless it was deleted here on purpose (tombstone).
 function mergeBackupSuppliers(list){
-  var res = { added: 0, updated: 0, skipped: 0, names: {} };
+  var res = { added: 0, updated: 0, skipped: 0 };
   var lk = function(n){ return ledgerSupplierKey(n); }; // CHEQUERS.KITCHEN, Chequers_Kitchen and chequers kitchen are one supplier
   var tb = ensureTombstoneStore().suppliers;
   var cb = (state.meta.cloud && state.meta.cloud.base) || {};
   var goneHere = function(target, cloudId){
     var key = lk(target);
     if(Object.keys(tb).some(function(k){ return lk(k) === key; })) return true; // deleted here on purpose
-    if(cloudId && cb["supplier:" + cloudId]) return !!cb["supplier:" + cloudId].deleted; // online copy knows this exact one
-    if(cloudId) return false; // made after any online deletion this device knows about
+    if(cloudId && cb["supplier:" + cloudId] && cb["supplier:" + cloudId].deleted) return true; // deleted online
     return Object.keys(cb).some(function(k){ var b = cb[k]; return /^supplier:/.test(k) && b && b.deleted && b.nk && lk(b.nk) === key; });
   };
   (Array.isArray(list) ? list : []).forEach(function(s){
@@ -11332,9 +11328,9 @@ function mergeBackupSuppliers(list){
       if(same.length > 1){ res.skipped++; return; } // not sure which one it is: left for the Suppliers tab
       rec = same[0] || null;
     }
-    if(rec){ res.names[lk(name)] = rec.name; if(fsMergeFieldsInto(rec, det)) res.updated++; return; }
+    if(rec){ if(fsMergeFieldsInto(rec, det)) res.updated++; return; }
     if(goneHere(target, typeof s.cloudId === "string" && s.cloudId ? s.cloudId : null)){ res.skipped++; return; }
-    res.names[lk(name)] = fsCreateSupplier(det, target).name;
+    fsCreateSupplier(det, target);
     res.added++;
   });
   return res;
