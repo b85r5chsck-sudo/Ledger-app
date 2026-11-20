@@ -36,3 +36,21 @@ There are no dependencies to install. Every build gets a new cache version, so i
 - Mac (Safari 17+): File, then Add to Dock
 
 Data is stored on each device. To move it to another device, use the app's JSON backup export and import.
+
+## Online copy (optional, per client)
+
+Lets iPads and iPhones share items, suppliers, recipes and saved orders with the
+desktop app. It's turned on by a `cloud` entry in the client's `client.json`
+(`brand.cloud`): `{ "url": "https://<project>.supabase.co", "key": "sb_publishable_…" }`.
+Leave it out and the app works as before, on this device only.
+
+Setting up a client's Supabase project:
+
+1. Supabase > SQL Editor > New query: paste `supabase/schema.sql` and Run. It is safe to run again.
+2. Authentication > Users > Add user: one email and password for the business. All its devices sign in with it.
+3. Authentication > Sign In / Providers: turn off "Allow new users to sign up".
+4. Use only the publishable key in `client.json`, never the secret key.
+
+On each device, tap the "☁ Online copy" chip next to the status pill to sign in.
+A device's ledger stays linked to the first account it syncs with.
+`app/cloud-sync.js` is built into the end of the app's main script by `scripts/build.js`.
