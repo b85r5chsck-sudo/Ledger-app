@@ -1,82 +1,114 @@
-// __BUILD_ID__ is replaced by scripts/build.js on every build, so devices
-// always pick up a new release.
-const CACHE_VERSION = "ledger-__BUILD_ID__";
+// Kitchen Ledger offline support.
+//
+// Each build is one "release": scripts/build.js fills in the release id (a
+// hash of the built files) and the file list below, so any change to the page,
+// settings or icons gives a new worker. A release is only used once all of its files are
+// cached and checked, and an open page always stays on one release.
 
-const APP_FILES = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./client-config.js",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/apple-touch-icon.png"
-];
+const CACHE_PREFIX = "kitchen-ledger:" + self.registration.scope + ":";
+const CACHE_NAME = CACHE_PREFIX + "__BUILD_ID__";
+const FONT_CACHE = CACHE_PREFIX + "fonts-v2"; // v2: only successful responses are kept
 
-// Libraries the page loads from CDNs, cached so the app works offline.
-const CDN_FILES = [
-  "https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css",
-  "https://cdn.tailwindcss.com",
-  "https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js",
-  "https://unpkg.com/docx@8.5.0/build/index.umd.js"
-];
+// Every file this release caches, with its SHA-256, filled in by
+// scripts/build.js. A download that doesn't match (for example a deploy that
+// changed mid-install) fails the install, and the browser tries again later.
+const APP_FILES = __ASSETS__;
+
+// The page has its libraries built in; only the fonts come from outside.
+// They are cached as they load, never as part of an install.
+const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
+
+async function sha256(buf) {
+  const d = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(d), b => b.toString(16).padStart(2, "0")).join("");
+}
 
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_VERSION);
-    await cache.addAll(APP_FILES);
-    // CDN files are best effort: one failing must not block install.
-    await Promise.all(CDN_FILES.map(async url => {
-      try {
-        const res = await fetch(new Request(url, { mode: "no-cors" }));
-        await cache.put(url, res);
-      } catch (e) {}
+    const fetched = await Promise.all(Object.keys(APP_FILES).map(async url => {
+      const res = await fetch(new Request(url, { cache: "reload" }));
+      if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
+      if ((await sha256(await res.clone().arrayBuffer())) !== APP_FILES[url]) throw new Error(`${url}: not this release`);
+      return [url, res];
     }));
-    self.skipWaiting();
+    // Only cached once every file has arrived and checked out, so a release
+    // is either complete or not there at all.
+    const cache = await caches.open(CACHE_NAME);
+    await Promise.all(fetched.map(([url, res]) => cache.put(url, res)));
+    // No skipWaiting: an open app keeps its release until every window is
+    // closed, so a page never mixes two releases. The next launch is new.
   })());
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k)));
-    await self.clients.claim();
+    // Only this app's own older releases, never other apps' caches on the same site.
+    await Promise.all(keys
+      .filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME && k !== FONT_CACHE)
+      .map(k => caches.delete(k)));
+    // The site's first web releases used "ledger-…" cache names with no scope.
+    // Remove one only when it is clearly this app's: it holds this scope's page,
+    // and every file from this site in it is one of this app's own files here.
+    // A cache shared with any other app, even one in a subfolder, is kept.
+    const scope = self.registration.scope;
+    const own = new Set(["", "index.html", "manifest.webmanifest", "client-config.js", "sw.js",
+      "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"]
+      .map(f => scope + f));
+    await Promise.all(keys.filter(k => k.startsWith("ledger-")).map(async k => {
+      const local = (await (await caches.open(k)).keys()).map(r => r.url).filter(u => new URL(u).origin === location.origin);
+      const hasPage = local.some(u => u === scope || u === scope + "index.html");
+      if (hasPage && local.every(u => own.has(u))) await caches.delete(k);
+    }));
   })());
 });
+
+function isAppEntry(url) {
+  const scope = new URL(self.registration.scope);
+  return url.origin === scope.origin &&
+    (url.pathname === scope.pathname || url.pathname === scope.pathname + "index.html");
+}
 
 self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // The page itself: network first so updates show up, cache when offline.
-  if (req.mode === "navigate") {
+  // The app page: always the installed release, so it matches its settings and
+  // works offline. A new release reaches devices through a new worker.
+  if (req.mode === "navigate" && isAppEntry(url)) {
     event.respondWith((async () => {
-      try {
-        const res = await fetch(req);
-        const cache = await caches.open(CACHE_VERSION);
-        cache.put("./index.html", res.clone());
-        return res;
-      } catch (e) {
-        return (await caches.match("./index.html")) || (await caches.match("./"));
-      }
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match("./");
+      if (cached) return cached;
+      return fetch(req); // first visit, before the worker has finished installing
     })());
     return;
   }
 
-  // Everything else (icons, CDN libraries, and anything Tailwind pulls in):
-  // cache first, then network, saving what we fetch for next time.
-  event.respondWith((async () => {
-    const cached = await caches.match(req, { ignoreSearch: url.origin === location.origin });
-    if (cached) return cached;
-    try {
-      const res = await fetch(req);
-      if (res && (res.ok || res.type === "opaque")) {
-        const cache = await caches.open(CACHE_VERSION);
-        cache.put(req, res.clone());
+  // This release's own files.
+  if (url.origin === location.origin) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
+      return (await cache.match(req, { ignoreSearch: true })) || fetch(req);
+    })());
+    return;
+  }
+
+  // Fonts: cache first, saving what loads for next time.
+  if (FONT_HOSTS.includes(url.hostname)) {
+    event.respondWith((async () => {
+      const cache = await caches.open(FONT_CACHE);
+      const cached = await cache.match(req);
+      if (cached && cached.ok) return cached;
+      if (cached) event.waitUntil(cache.delete(req).catch(() => {})); // never reuse a failed load
+      // CORS mode so the status can be checked: only a real success is kept,
+      // and a failed load is simply tried again next time.
+      const res = await fetch(req.mode === "no-cors" ? new Request(req.url, { mode: "cors", credentials: "omit" }) : req);
+      if (res.ok) {
+        event.waitUntil(cache.put(req, res.clone()).catch(() => {}));
       }
       return res;
-    } catch (e) {
-      return cached || Response.error();
-    }
-  })());
+    })());
+  }
 });

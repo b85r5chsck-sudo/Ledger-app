@@ -56,7 +56,9 @@
     const r = spec.radius * s;
     ctx.beginPath(); ctx.roundRect(0, 0, s, s, r); ctx.fill();
     if (logoImg) {
-      const box = s * (spec.file.includes("maskable") ? 0.6 : 0.78);
+      // maskable icons: the whole logo must fit inside the safe circle (80% of the width),
+      // so its corners stay visible whatever shape the phone crops to
+      const box = s * (spec.file.includes("maskable") ? 0.55 : 0.78);
       const k = Math.min(box / logoImg.width, box / logoImg.height);
       const w = logoImg.width * k, h = logoImg.height * k;
       ctx.drawImage(logoImg, (s - w) / 2, (s - h) / 2, w, h);
