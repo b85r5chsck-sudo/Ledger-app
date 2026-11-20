@@ -7698,6 +7698,7 @@ document.getElementById("ordering-content").addEventListener("click", function(e
     var idx = state.orders.findIndex(function(o){ return o.id===id; });
     if(idx>=0){
       state.orders.splice(idx,1);
+      if(id){ state.meta.deletedOrderIds = state.meta.deletedOrderIds || {}; state.meta.deletedOrderIds[id] = new Date().toISOString(); } // 1.0.6 — so a Full backup doesn't bring it back
       persist();
       updateTabCounts();
       renderOrderingSection();
@@ -11048,6 +11049,7 @@ function showImportReport(report){
   ];
   if(report.suppliers) rows.push(["Suppliers added", report.suppliers.added], ["Suppliers with details filled in", report.suppliers.updated]); // 1.0.6 — Full backup brings supplier details
   if(report.orders) rows.push(["Saved orders added", report.orders.added]);
+  if((report.suppliers && report.suppliers.skipped) || (report.orders && report.orders.skipped)) rows.push(["Left out (deleted here, damaged or unclear)", ((report.suppliers && report.suppliers.skipped) || 0) + ((report.orders && report.orders.skipped) || 0)]);
   // v5.3.2 — an Excel-workbook import (this modal, or the quiet background
   // sync that uses the same engine — see mergeImportedRecipes) no longer
   // overwrites a recipe it finds a same-named sheet for; it flags it
@@ -11302,7 +11304,16 @@ function runImportFromBackup(parsed){
 // after the usual redirects) gets the backup's filled-in details; one that
 // isn't here is added, unless it was deleted here on purpose (tombstone).
 function mergeBackupSuppliers(list){
-  var res = { added: 0, updated: 0 };
+  var res = { added: 0, updated: 0, skipped: 0 };
+  var lk = function(n){ return ledgerSupplierKey(n); }; // CHEQUERS.KITCHEN, Chequers_Kitchen and chequers kitchen are one supplier
+  var tb = ensureTombstoneStore().suppliers;
+  var cb = (state.meta.cloud && state.meta.cloud.base) || {};
+  var goneHere = function(target, cloudId){
+    var key = lk(target);
+    if(Object.keys(tb).some(function(k){ return lk(k) === key; })) return true; // deleted here on purpose
+    if(cloudId && cb["supplier:" + cloudId] && cb["supplier:" + cloudId].deleted) return true; // deleted online
+    return Object.keys(cb).some(function(k){ var b = cb[k]; return /^supplier:/.test(k) && b && b.deleted && b.nk && lk(b.nk) === key; });
+  };
   (Array.isArray(list) ? list : []).forEach(function(s){
     if(!s || typeof s !== "object") return;
     var name = String(s.name || "").trim();
@@ -11312,25 +11323,38 @@ function mergeBackupSuppliers(list){
     var det = { address: s.address, email: s.email, orderingMethod: s.orderingMethod, phone: s.phone, accountNumber: s.accountNumber, notes: s.notes };
     Object.keys(det).forEach(function(k){ det[k] = det[k] == null ? "" : String(det[k]).trim(); });
     var rec = getSupplierByName(target);
+    if(!rec){
+      var key = lk(target), same = state.suppliers.filter(function(x){ return lk(x.name) === key; });
+      if(same.length > 1){ res.skipped++; return; } // not sure which one it is: left for the Suppliers tab
+      rec = same[0] || null;
+    }
     if(rec){ if(fsMergeFieldsInto(rec, det)) res.updated++; return; }
-    if(tombstoned("suppliers", supplierKeyOf(target))) return;
+    if(goneHere(target, typeof s.cloudId === "string" ? s.cloudId : null)){ res.skipped++; return; }
     fsCreateSupplier(det, target);
     res.added++;
   });
   return res;
 }
 // Saved orders are snapshots with one id everywhere: one not here yet is
-// added, unless it was deleted here (shared ledger or online copy says so).
+// added, unless it was deleted here (by hand, or the shared ledger or online
+// copy says so). A damaged order is left out.
 function mergeBackupOrders(list){
-  var res = { added: 0 };
+  var res = { added: 0, skipped: 0 };
   var have = {}; state.orders.forEach(function(o){ if(o && o.id) have[o.id] = true; });
-  var sd = state.meta.sharedDeleted || {}, sb = state.meta.sharedBase || {};
+  var sd = state.meta.sharedDeleted || {}, sb = state.meta.sharedBase || {}, del = state.meta.deletedOrderIds || {};
   var cb = (state.meta.cloud && state.meta.cloud.base) || {};
   (Array.isArray(list) ? list : []).forEach(function(o){
-    if(!o || typeof o !== "object" || !o.id || have[o.id]) return;
+    if(!o || typeof o !== "object" || typeof o.id !== "string" || !o.id || have[o.id]) return;
+    var ok = typeof o.supplier === "string" && o.supplier.trim() && typeof o.date === "string" && !isNaN(new Date(o.date).getTime()) &&
+      Array.isArray(o.items) && o.items.every(function(it){ return it && typeof it === "object"; });
+    if(!ok){ res.skipped++; return; }
     var k = "order:" + o.id;
-    if(sd[k] || sb[k] || cb[k]) return; // known here before and gone now: deleted here, so not brought back
-    state.orders.push(JSON.parse(JSON.stringify(o)));
+    if(del[o.id] || sd[k] || sb[k] || cb[k]){ res.skipped++; return; } // known here before and gone now: deleted here, so not brought back
+    var c = JSON.parse(JSON.stringify(o));
+    delete c.mofWritten; // this computer's own Master Order File may not have it yet
+    if(typeof c.total !== "number") c.total = Number(c.total) || 0;
+    if(typeof c.text !== "string") c.text = "";
+    state.orders.push(c);
     have[o.id] = true;
     res.added++;
   });
