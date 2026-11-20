@@ -1,0 +1,8 @@
+# Cloudflare Pages headers. The offline worker checks every file against the
+# SHA-256 it was built with, so the host must serve the files unchanged:
+# no-transform stops Cloudflare (or any proxy) from minifying or injecting
+# scripts into them. sw.js is never cached by the browser, so updates are found.
+/*
+  Cache-Control: no-cache, no-transform
+/sw.js
+  Cache-Control: no-store, no-transform

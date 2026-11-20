@@ -82,6 +82,7 @@ fs.writeFileSync(path.join(out, "manifest.webmanifest"), JSON.stringify({
 }, null, 2));
 
 for (const f of icons) fs.copyFileSync(path.join(clientDir, f), path.join(out, "icons", f));
+fs.copyFileSync(path.join(root, "_headers"), path.join(out, "_headers")); // hosting rules (see _headers)
 
 // Each cached file's SHA-256 goes into the worker, and the release id is a
 // hash of all of them, so any change makes a new worker and devices update.

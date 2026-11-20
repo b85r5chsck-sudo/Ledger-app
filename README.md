@@ -25,7 +25,7 @@ There are no dependencies to install. Every build gets a new cache version, so i
 
 ## Files
 - `app/index.html`: the desktop app's page, copied unchanged from `Updates/<version>/source/app/index.html`. To update the web app to a new desktop version, copy that file in and commit it. The build adds the web-only parts.
-- `sw.js`: offline cache
+- `sw.js`: offline cache. Each release's files are checked against the SHA-256 the build gives them, so the host must serve them unchanged. `_headers` sets `no-transform` for Cloudflare Pages; on any other host, turn off minifying and script injection
 - `clients/<name>/`: `client.json` plus 4 icons for each client
 - `scripts/build.js`: builds one client into `dist/`
 - `tools/icon-maker.html`: makes icon PNGs from initials or a logo

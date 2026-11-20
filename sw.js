@@ -7,7 +7,7 @@
 
 const CACHE_PREFIX = "kitchen-ledger:" + self.registration.scope + ":";
 const CACHE_NAME = CACHE_PREFIX + "__BUILD_ID__";
-const FONT_CACHE = CACHE_PREFIX + "fonts";
+const FONT_CACHE = CACHE_PREFIX + "fonts-v2"; // v2: only successful responses are kept
 
 // Every file this release caches, with its SHA-256, filled in by
 // scripts/build.js. A download that doesn't match (for example a deploy that
@@ -45,9 +45,17 @@ self.addEventListener("activate", event => {
     const keys = await caches.keys();
     // Only this app's own older releases, never other apps' caches on the same site.
     await Promise.all(keys
-      .filter(k => (k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME && k !== FONT_CACHE) ||
-        k.startsWith("ledger-")) // this site's first web releases used "ledger-…" names
+      .filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME && k !== FONT_CACHE)
       .map(k => caches.delete(k)));
+    // The site's first web releases used "ledger-…" cache names with no scope.
+    // Remove one only when it is clearly this app's: it holds this scope's
+    // page, and every file from this site in it is inside this scope.
+    const scope = self.registration.scope;
+    await Promise.all(keys.filter(k => k.startsWith("ledger-")).map(async k => {
+      const local = (await (await caches.open(k)).keys()).map(r => r.url).filter(u => new URL(u).origin === location.origin);
+      const hasPage = local.some(u => u === scope || u === scope + "index.html");
+      if (hasPage && local.every(u => u.startsWith(scope))) await caches.delete(k);
+    }));
   })());
 });
 
@@ -88,7 +96,8 @@ self.addEventListener("fetch", event => {
     event.respondWith((async () => {
       const cache = await caches.open(FONT_CACHE);
       const cached = await cache.match(req);
-      if (cached) return cached;
+      if (cached && cached.ok) return cached;
+      if (cached) event.waitUntil(cache.delete(req).catch(() => {})); // never reuse a failed load
       // CORS mode so the status can be checked: only a real success is kept,
       // and a failed load is simply tried again next time.
       const res = await fetch(req.mode === "no-cors" ? new Request(req.url, { mode: "cors", credentials: "omit" }) : req);
