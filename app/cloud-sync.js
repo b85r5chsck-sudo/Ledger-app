@@ -112,7 +112,7 @@
         // a deleted one only when this is exactly the copy that was deleted,
         // so a different record that happens to share the name is never lost
         if (!free.length) free = (gone[kind + "|" + nk] || []).filter(function (t) {
-          return !used[kind + ":" + t.id] && t.was === (fp = fp || fpOf(data));
+          return !used[kind + ":" + t.id] && t.fps.indexOf(fp = fp || fpOf(data)) >= 0;
         }).map(function (t) { return t.id; });
         o.cloudId = free[0] || newId(kind);
         used[kind + ":" + o.cloudId] = true; changed = true;
@@ -211,7 +211,7 @@
   // Sends the changes in batches. Each change's new agreed state is only
   // recorded once its batch has been accepted, so anything that didn't go up
   // is tried again next time.
-  function push(out, base, g) {
+  function push(out, base, g, info) {
     var chunks = []; for (var i = 0; i < out.length; i += 500) chunks.push(out.slice(i, i + 500));
     return chunks.reduce(function (p, c) {
       return p.then(function () {
@@ -220,13 +220,14 @@
           .then(function (back) {
             // only what the server says it now holds counts as agreed
             var got = {}; (Array.isArray(back) ? back : []).forEach(function (r) { got[r.kind + ":" + r.key] = r; });
-            var missing = 0;
+            var missing = 0, rejected = 0;
             c.forEach(function (x) {
               var r = got[x.k];
               if (!r) { missing++; return; }
               if (r.fp === x.row.fp && !!r.deleted === x.row.deleted) base[x.k] = x.nb;
-              // otherwise the server kept something else (a deletion it won't undo); the next pull brings it
+              else rejected++; // the server kept something else (a deletion it won't undo); fetched straight after
             });
+            info.rejected += rejected;
             if (missing) throw new Error("The online copy didn't confirm " + missing + " change" + (missing === 1 ? "" : "s") + "; will retry");
           });
       });
@@ -266,7 +267,7 @@
     if (other) { setStatus("error", "This device's ledger is linked to " + other + ". Sign out and sign in with that account."); return Promise.resolve(); }
     if (!m.accountId && session.uid) { m.accountId = session.uid; m.account = session.email; }
     setStatus("syncing");
-    var changed = false, applied = 0, conflicts = 0, sent = 0;
+    var changed = false, applied = 0, conflicts = 0, sent = 0, info = { rejected: 0 };
     running = pullSince(m.lastRev, g).then(function (rows) {
       stale(g);
       var firstMeeting = !m.lastRev;
@@ -278,7 +279,8 @@
         var nk = r.deleted ? (r.data && r.data.nk) : (r.data ? NAMEKEY[r.kind](r.data) : null);
         if (!nk || (r.deleted && !firstMeeting)) return;
         var k = r.kind + "|" + nk;
-        if (r.deleted) { if (r.data.was) (gone[k] = gone[k] || []).push({ id: r.key, was: r.data.was }); }
+        // was: the server's last version; seen: the version the deleting device had
+        if (r.deleted) { if (r.data.was || r.data.seen) (gone[k] = gone[k] || []).push({ id: r.key, fps: [r.data.was, r.data.seen] }); }
         else (live[k] = live[k] || []).push(r.key);
       });
       if (giveIds(live, gone)) changed = true;
@@ -318,13 +320,18 @@
         var b = base[k]; if (b.deleted || now[k]) return;
         var kind = k.slice(0, k.indexOf(":")), id = k.slice(k.indexOf(":") + 1);
         out.push({ k: k, nb: { fp: "deleted", nk: b.nk || null, deleted: true },
-          row: { kind: kind, key: id, data: b.nk ? { nk: b.nk, was: b.fp } : null, fp: "deleted", deleted: true, updated_by: computer() } });
+          row: { kind: kind, key: id, data: b.nk ? { nk: b.nk, was: b.fp, seen: b.fp } : null, fp: "deleted", deleted: true, updated_by: computer() } });
       });
       sent = out.length;
       if (out.length) changed = true;
-      return push(out, base, g);
+      return push(out, base, g, info);
     }).then(function () {
-      setStatus("synced", "", { applied: applied, sent: sent, conflicts: conflicts });
+      if (info.rejected) {
+        // edits to records deleted elsewhere: say so, and fetch the deletions now
+        if (typeof toast === "function") toast("Online copy: " + info.rejected + " change" + (info.rejected === 1 ? " was" : "s were") + " not kept because " + (info.rejected === 1 ? "that record was" : "those records were") + " deleted on another device");
+        setTimeout(syncOnce, 0);
+      }
+      setStatus(info.rejected ? "syncing" : "synced", "", { applied: applied, sent: sent, conflicts: conflicts });
     }, function (e) {
       if (e && e.stale) return;
       setStatus(session ? "error" : "signed-out", e && e.message ? e.message : String(e));
@@ -361,7 +368,7 @@
   function setStatus(s, err, info) {
     status.state = s; status.error = err || "";
     if (s === "synced") status.at = new Date();
-    if (info && info.applied && typeof toast === "function") toast("A140", "Online copy: took in " + info.applied + " change" + (info.applied === 1 ? "" : "s") + " from other devices");
+    if (info && info.applied && typeof toast === "function") toast("Online copy: took in " + info.applied + " change" + (info.applied === 1 ? "" : "s") + " from other devices");
     draw();
   }
   function draw() {
