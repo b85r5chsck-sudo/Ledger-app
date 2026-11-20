@@ -27,7 +27,6 @@ for (const f of icons) {
 }
 
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
-const buildId = `${client}-${new Date().toISOString().replace(/\D/g, "").slice(0, 14)}`;
 
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(path.join(out, "icons"), { recursive: true });
@@ -55,7 +54,7 @@ let html = fs.readFileSync(path.join(root, "app", "index.html"), "utf8");
 if (!/<head>/i.test(html) || !/<\/body>/i.test(html)) { console.error("app/index.html has no <head> or </body>"); process.exit(1); }
 html = html
   .replace(/<head>/i, m => m + headExtra)
-  .replace(/<title>[\s\S]*?<\/title>/i, `<title>${esc(cfg.appName)}</title>`)
+  .replace(/<title>[\s\S]*?<\/title>/i, () => `<title>${esc(cfg.appName)}</title>`)
   .replace(/<\/body>(?![\s\S]*<\/body>)/i, m => bodyExtra + "\n" + m);
 fs.writeFileSync(path.join(out, "index.html"), html);
 
@@ -64,8 +63,6 @@ fs.writeFileSync(path.join(out, "client-config.js"),
   // the desktop app gets these settings from brand/brand.json through its preload bridge
   `window.klBrand = window.LEDGER_CLIENT.brand || {};\n`);
 
-fs.writeFileSync(path.join(out, "sw.js"),
-  fs.readFileSync(path.join(root, "sw.js"), "utf8").replace(/__BUILD_ID__/g, buildId));
 
 fs.writeFileSync(path.join(out, "manifest.webmanifest"), JSON.stringify({
   name: cfg.appName,
@@ -85,5 +82,16 @@ fs.writeFileSync(path.join(out, "manifest.webmanifest"), JSON.stringify({
 }, null, 2));
 
 for (const f of icons) fs.copyFileSync(path.join(clientDir, f), path.join(out, "icons", f));
+
+// The release id is a hash of everything the worker caches, so any change to
+// the page, settings or icons makes a new worker and devices update.
+const hash = require("crypto").createHash("sha256");
+for (const f of ["index.html", "client-config.js", "manifest.webmanifest", ...icons.map(i => "icons/" + i)]) {
+  hash.update(f + "\0"); hash.update(fs.readFileSync(path.join(out, f)));
+}
+const swSource = fs.readFileSync(path.join(root, "sw.js"), "utf8");
+hash.update(swSource);
+const buildId = `${client}-${hash.digest("hex").slice(0, 16)}`;
+fs.writeFileSync(path.join(out, "sw.js"), swSource.replace(/__BUILD_ID__/g, () => buildId));
 
 console.log(`Built "${cfg.appName}" (${client}) into dist/  [${buildId}]`);
