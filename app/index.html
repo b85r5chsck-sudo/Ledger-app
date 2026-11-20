@@ -7698,6 +7698,7 @@ document.getElementById("ordering-content").addEventListener("click", function(e
     var idx = state.orders.findIndex(function(o){ return o.id===id; });
     if(idx>=0){
       state.orders.splice(idx,1);
+      if(id){ state.meta.deletedOrderIds = state.meta.deletedOrderIds || {}; state.meta.deletedOrderIds[id] = new Date().toISOString(); } // 1.0.6 — so a Full backup doesn't bring it back
       persist();
       updateTabCounts();
       renderOrderingSection();
@@ -11046,6 +11047,9 @@ function showImportReport(report){
     ["Matched by product code (renamed)", (report.items.counts.renamedByCode||[]).length],
     ["Recipes added", report.recipes.counts.added]
   ];
+  if(report.suppliers) rows.push(["Suppliers added", report.suppliers.added], ["Suppliers with details filled in", report.suppliers.updated]); // 1.0.6 — Full backup brings supplier details
+  if(report.orders) rows.push(["Saved orders added", report.orders.added]);
+  if((report.suppliers && report.suppliers.skipped) || (report.orders && report.orders.skipped)) rows.push(["Left out (deleted here, damaged or unclear)", ((report.suppliers && report.suppliers.skipped) || 0) + ((report.orders && report.orders.skipped) || 0)]);
   // v5.3.2 — an Excel-workbook import (this modal, or the quiet background
   // sync that uses the same engine — see mergeImportedRecipes) no longer
   // overwrites a recipe it finds a same-named sheet for; it flags it
@@ -11224,6 +11228,7 @@ function runImportFromBackup(parsed){
   }
   if(pm && pm.batchCodeNext > (state.meta.batchCodeNext || 0)) state.meta.batchCodeNext = pm.batchCodeNext;
   if(pm && pm.menuCodeNext > (state.meta.menuCodeNext || 0)) state.meta.menuCodeNext = pm.menuCodeNext; // 1.0.4
+  var suppliersResult = mergeBackupSuppliers(parsed.suppliers); // 1.0.6 — before items, so items find their supplier
   var itemsById = {};
   (parsed.items||[]).forEach(function(i){ itemsById[i.id]=i; });
   var genericItems = (parsed.items||[]).map(function(i){ return i; });
@@ -11284,10 +11289,76 @@ function runImportFromBackup(parsed){
   // keeps the original overwrite-on-match behaviour, unlike every Excel
   // workbook pull above (see the note on mergeImportedRecipes, v5.3.2).
   var recipesResult = mergeImportedRecipes(genericRecipes, itemsResult.idMap, { overwriteOnMatch: true, sameLedger: sameLedger });
+  var ordersResult = mergeBackupOrders(parsed.orders);
   state.meta.lastImportedAt = new Date().toISOString();
   persist();
   renderAll();
-  showImportReport({ items:itemsResult, recipes:recipesResult, skippedSheets:[] });
+  if(typeof renderSuppliers === "function") renderSuppliers();
+  if(typeof updateTabCounts === "function") updateTabCounts();
+  showImportReport({ items:itemsResult, recipes:recipesResult, suppliers:suppliersResult, orders:ordersResult, skippedSheets:[] });
+}
+
+// 1.0.6 — a Full backup used to bring only items and recipes, so supplier
+// details (address, email, phone, account number, ordering method, notes)
+// and saved orders were left behind. Suppliers: one already here (by name,
+// after the usual redirects) gets the backup's filled-in details; one that
+// isn't here is added, unless it was deleted here on purpose (tombstone).
+function mergeBackupSuppliers(list){
+  var res = { added: 0, updated: 0, skipped: 0 };
+  var lk = function(n){ return ledgerSupplierKey(n); }; // CHEQUERS.KITCHEN, Chequers_Kitchen and chequers kitchen are one supplier
+  var tb = ensureTombstoneStore().suppliers;
+  var cb = (state.meta.cloud && state.meta.cloud.base) || {};
+  var goneHere = function(target, cloudId){
+    var key = lk(target);
+    if(Object.keys(tb).some(function(k){ return lk(k) === key; })) return true; // deleted here on purpose
+    if(cloudId && cb["supplier:" + cloudId] && cb["supplier:" + cloudId].deleted) return true; // deleted online
+    return Object.keys(cb).some(function(k){ var b = cb[k]; return /^supplier:/.test(k) && b && b.deleted && b.nk && lk(b.nk) === key; });
+  };
+  (Array.isArray(list) ? list : []).forEach(function(s){
+    if(!s || typeof s !== "object") return;
+    var name = String(s.name || "").trim();
+    if(!name || name.toLowerCase() === "unassigned") return;
+    var target = resolveSupplierRedirect(name) || name;
+    if(typeof PHANTOM_SUPPLIER_REMOVE_ONLY !== "undefined" && PHANTOM_SUPPLIER_REMOVE_ONLY.indexOf(target.toLowerCase()) >= 0) return;
+    var det = { address: s.address, email: s.email, orderingMethod: s.orderingMethod, phone: s.phone, accountNumber: s.accountNumber, notes: s.notes };
+    Object.keys(det).forEach(function(k){ det[k] = det[k] == null ? "" : String(det[k]).trim(); });
+    var rec = getSupplierByName(target);
+    if(!rec){
+      var key = lk(target), same = state.suppliers.filter(function(x){ return lk(x.name) === key; });
+      if(same.length > 1){ res.skipped++; return; } // not sure which one it is: left for the Suppliers tab
+      rec = same[0] || null;
+    }
+    if(rec){ if(fsMergeFieldsInto(rec, det)) res.updated++; return; }
+    if(goneHere(target, typeof s.cloudId === "string" && s.cloudId ? s.cloudId : null)){ res.skipped++; return; }
+    fsCreateSupplier(det, target);
+    res.added++;
+  });
+  return res;
+}
+// Saved orders are snapshots with one id everywhere: one not here yet is
+// added, unless it was deleted here (by hand, or the shared ledger or online
+// copy says so). A damaged order is left out.
+function mergeBackupOrders(list){
+  var res = { added: 0, skipped: 0 };
+  var have = {}; state.orders.forEach(function(o){ if(o && o.id) have[o.id] = true; });
+  var sd = state.meta.sharedDeleted || {}, sb = state.meta.sharedBase || {}, del = state.meta.deletedOrderIds || {};
+  var cb = (state.meta.cloud && state.meta.cloud.base) || {};
+  (Array.isArray(list) ? list : []).forEach(function(o){
+    if(!o || typeof o !== "object" || typeof o.id !== "string" || !o.id || have[o.id]) return;
+    var ok = typeof o.supplier === "string" && o.supplier.trim() && typeof o.date === "string" && !isNaN(new Date(o.date).getTime()) &&
+      Array.isArray(o.items) && o.items.every(function(it){ return it && typeof it === "object" && typeof it.name === "string" && (it.qty == null || typeof it.qty === "number" || typeof it.qty === "string"); });
+    if(!ok){ res.skipped++; return; }
+    var k = "order:" + o.id;
+    if(del[o.id] || sd[k] || sb[k] || cb[k]){ res.skipped++; return; } // known here before and gone now: deleted here, so not brought back
+    var c = JSON.parse(JSON.stringify(o));
+    delete c.mofWritten; // this computer's own Master Order File may not have it yet
+    if(typeof c.total !== "number") c.total = Number(c.total) || 0;
+    if(typeof c.text !== "string") c.text = "";
+    state.orders.push(c);
+    have[o.id] = true;
+    res.added++;
+  });
+  return res;
 }
 
 function handleImportFile(file, kindTitle, importToken){
