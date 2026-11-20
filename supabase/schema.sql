@@ -28,6 +28,12 @@ begin
   -- committed in order and a device never skips a write that was still saving.
   perform pg_advisory_xact_lock(hashtext('ledger_records:' || coalesce(auth.uid()::text, '')));
   new.owner := auth.uid();
+  -- A deletion is final: an upload that would bring a deleted record back
+  -- (from a device that hadn't heard of the deletion yet) keeps it deleted.
+  -- The new number makes every device fetch the deletion again.
+  if tg_op = 'UPDATE' and old.deleted and not new.deleted then
+    new.data := old.data; new.fp := old.fp; new.deleted := true;
+  end if;
   new.rev := nextval('public.ledger_records_rev_seq');
   new.updated_at := now();
   return new;

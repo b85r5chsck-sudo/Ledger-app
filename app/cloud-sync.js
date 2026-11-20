@@ -18,8 +18,9 @@
  * never turns the restore into deletions.
  *
  * Every record has a cloudId. Records without one take the id of an online
- * record with the same name. On a device's first sync that includes deleted
- * ones, so an old copy of something deleted elsewhere is deleted here too.
+ * record with the same name. On a device's first sync, an unchanged old copy
+ * of something deleted elsewhere takes the deleted record's id, so it is
+ * deleted here too instead of coming back.
  *
  * A device's ledger belongs to the first account it syncs with; signing in
  * with another account never sends this ledger there.
@@ -102,13 +103,17 @@
     function add(k, ids) { (known[k] = known[k] || []).push.apply(known[k], ids); }
     Object.keys(m.base).forEach(function (k) { var b = m.base[k]; if (b.nk && !b.deleted) add(k.split(":")[0] + "|" + b.nk, [k.slice(k.indexOf(":") + 1)]); });
     Object.keys(live).forEach(function (k) { add(k, live[k]); });
-    Object.keys(gone).forEach(function (k) { add(k, gone[k]); });
     var changed = false;
     ["item", "supplier", "recipe"].forEach(function (kind) {
       LIST[kind]().forEach(function (o) {
         if (o.cloudId) return;
-        var nk = NAMEKEY[kind](DATA[kind](o));
+        var data = DATA[kind](o), nk = NAMEKEY[kind](data), fp;
         var free = (known[kind + "|" + nk] || []).filter(function (id) { return !used[kind + ":" + id]; });
+        // a deleted one only when this is exactly the copy that was deleted,
+        // so a different record that happens to share the name is never lost
+        if (!free.length) free = (gone[kind + "|" + nk] || []).filter(function (t) {
+          return !used[kind + ":" + t.id] && t.was === (fp = fp || fpOf(data));
+        }).map(function (t) { return t.id; });
         o.cloudId = free[0] || newId(kind);
         used[kind + ":" + o.cloudId] = true; changed = true;
       });
@@ -210,9 +215,20 @@
     var chunks = []; for (var i = 0; i < out.length; i += 500) chunks.push(out.slice(i, i + 500));
     return chunks.reduce(function (p, c) {
       return p.then(function () {
-        return api("?on_conflict=owner,kind,key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+        return api("?on_conflict=owner,kind,key&select=kind,key,fp,deleted", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=representation" },
           body: JSON.stringify(c.map(function (x) { return x.row; })) }, g)
-          .then(function () { c.forEach(function (x) { base[x.k] = x.nb; }); });
+          .then(function (back) {
+            // only what the server says it now holds counts as agreed
+            var got = {}; (Array.isArray(back) ? back : []).forEach(function (r) { got[r.kind + ":" + r.key] = r; });
+            var missing = 0;
+            c.forEach(function (x) {
+              var r = got[x.k];
+              if (!r) { missing++; return; }
+              if (r.fp === x.row.fp && !!r.deleted === x.row.deleted) base[x.k] = x.nb;
+              // otherwise the server kept something else (a deletion it won't undo); the next pull brings it
+            });
+            if (missing) throw new Error("The online copy didn't confirm " + missing + " change" + (missing === 1 ? "" : "s") + "; will retry");
+          });
       });
     }, Promise.resolve());
   }
@@ -261,8 +277,9 @@
         if (r.kind === "order" || !NAMEKEY[r.kind]) return;
         var nk = r.deleted ? (r.data && r.data.nk) : (r.data ? NAMEKEY[r.kind](r.data) : null);
         if (!nk || (r.deleted && !firstMeeting)) return;
-        var map = r.deleted ? gone : live, k = r.kind + "|" + nk;
-        (map[k] = map[k] || []).push(r.key);
+        var k = r.kind + "|" + nk;
+        if (r.deleted) { if (r.data.was) (gone[k] = gone[k] || []).push({ id: r.key, was: r.data.was }); }
+        else (live[k] = live[k] || []).push(r.key);
       });
       if (giveIds(live, gone)) changed = true;
       var local = snapshot(), base = m.base, maxRev = m.lastRev;
@@ -301,7 +318,7 @@
         var b = base[k]; if (b.deleted || now[k]) return;
         var kind = k.slice(0, k.indexOf(":")), id = k.slice(k.indexOf(":") + 1);
         out.push({ k: k, nb: { fp: "deleted", nk: b.nk || null, deleted: true },
-          row: { kind: kind, key: id, data: b.nk ? { nk: b.nk } : null, fp: "deleted", deleted: true, updated_by: computer() } });
+          row: { kind: kind, key: id, data: b.nk ? { nk: b.nk, was: b.fp } : null, fp: "deleted", deleted: true, updated_by: computer() } });
       });
       sent = out.length;
       if (out.length) changed = true;
@@ -312,11 +329,16 @@
       if (e && e.stale) return;
       setStatus(session ? "error" : "signed-out", e && e.message ? e.message : String(e));
     }).then(function () {
-      if (changed) { // saved even after a sign-out, so the ledger and its agreed state stay together
-        quietPersist();
-        if (applied) { try { renderAll(); } catch (e) {} }
+      try {
+        if (changed) { // saved even after a sign-out, so the ledger and its agreed state stay together
+          quietPersist();
+          if (applied) { try { renderAll(); } catch (e) {} }
+        }
+      } catch (e) {
+        setStatus("error", "Couldn't save on this device: " + (e && e.message ? e.message : String(e)));
+      } finally {
+        running = null;
       }
-      running = null;
     });
     return running;
   }
