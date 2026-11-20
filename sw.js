@@ -48,13 +48,17 @@ self.addEventListener("activate", event => {
       .filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME && k !== FONT_CACHE)
       .map(k => caches.delete(k)));
     // The site's first web releases used "ledger-…" cache names with no scope.
-    // Remove one only when it is clearly this app's: it holds this scope's
-    // page, and every file from this site in it is inside this scope.
+    // Remove one only when it is clearly this app's: it holds this scope's page,
+    // and every file from this site in it is one of this app's own files here.
+    // A cache shared with any other app, even one in a subfolder, is kept.
     const scope = self.registration.scope;
+    const own = new Set(["", "index.html", "manifest.webmanifest", "client-config.js", "sw.js",
+      "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"]
+      .map(f => scope + f));
     await Promise.all(keys.filter(k => k.startsWith("ledger-")).map(async k => {
       const local = (await (await caches.open(k)).keys()).map(r => r.url).filter(u => new URL(u).origin === location.origin);
       const hasPage = local.some(u => u === scope || u === scope + "index.html");
-      if (hasPage && local.every(u => u.startsWith(scope))) await caches.delete(k);
+      if (hasPage && local.every(u => own.has(u))) await caches.delete(k);
     }));
   })());
 });
