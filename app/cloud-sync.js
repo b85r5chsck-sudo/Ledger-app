@@ -128,7 +128,10 @@
     var out = [];
     if (!d || typeof d !== "object") return out;
     if (d.last && d.was) { try { out.push({ nk: NAMEKEY[kind](d.last), fp: d.was }); } catch (e) {} }
-    (Array.isArray(d.seen) ? d.seen : []).forEach(function (v) { if (v && v.nk && v.fp) out.push({ nk: v.nk, fp: v.fp }); });
+    (Array.isArray(d.seen) ? d.seen : []).forEach(function (v) {
+      if (v && v.nk && v.fp) out.push({ nk: v.nk, fp: v.fp });
+      else if (typeof v === "string" && d.nk) out.push({ nk: d.nk, fp: v }); // an earlier single value, kept in the list by the database
+    });
     if (d.nk && typeof d.was === "string") out.push({ nk: d.nk, fp: d.was });   // earlier test rows
     if (d.nk && typeof d.seen === "string") out.push({ nk: d.nk, fp: d.seen });
     return out;
@@ -170,12 +173,12 @@
   function readSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { return null; } }
   session = readSession();
   function storeSession(s) { session = s; try { if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s)); else localStorage.removeItem(SESSION_KEY); } catch (e) {} }
-  function signOut() { gen++; storeSession(null); }
+  function signOut() { gen++; rejectRetried = false; storeSession(null); }
   function stale(g) { if (g !== gen) throw Object.assign(new Error("Signed out"), { stale: true }); }
   window.addEventListener("storage", function (e) {
     if (e.key !== SESSION_KEY) return;
     var s = readSession();
-    if (!s || !session || s.uid !== session.uid) gen++;
+    if (!s || !session || s.uid !== session.uid) { gen++; rejectRetried = false; }
     session = s; draw();
   });
 
@@ -444,7 +447,7 @@
       form.onsubmit = function (e) {
         e.preventDefault();
         var err = box.querySelector(".err"); err.textContent = "Signing in…"; err.style.color = "#555";
-        var g = ++gen;
+        var g = ++gen; rejectRetried = false;
         authCall("password", { email: form.e.value.trim(), password: form.p.value }, g).then(function () {
           var other = accountProblem(cloudMeta());
           if (other) { signOut(); throw Object.assign(new Error(""), { other: other }); }
