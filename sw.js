@@ -12,12 +12,10 @@ const APP_FILES = [
   "./icons/apple-touch-icon.png"
 ];
 
-// Libraries the page loads from CDNs, cached so the app works offline.
+// The page has its libraries built in; only the fonts come from outside.
+// Font files the stylesheet points to are cached the first time they load.
 const CDN_FILES = [
-  "https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css",
-  "https://cdn.tailwindcss.com",
-  "https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js",
-  "https://unpkg.com/docx@8.5.0/build/index.umd.js"
+  "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
 ];
 
 self.addEventListener("install", event => {

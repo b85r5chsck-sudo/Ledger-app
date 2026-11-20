@@ -1,8 +1,8 @@
 {
   "appName": "Chequers Kitchen Ledger",
   "shortName": "Ledger",
-  "initials": "KL",
-  "themeColor": "#491eff",
+  "initials": "C",
+  "themeColor": "#166e30",
   "backgroundColor": "#ffffff",
   "brand": {
     "client": "Chequers",
@@ -10,6 +10,30 @@
     "kitchenSupplier": "CHEQUERS KITCHEN",
     "batchCodeFirst": 67,
     "menuCodeFirst": 10,
-    "fileStart": "chequers"
+    "fileStart": "chequers",
+    "supplierLayouts": [
+      {
+        "id": "savona",
+        "name": "Savona",
+        "match": "savona",
+        "sheet": "Data",
+        "headerRow": 2,
+        "mapping": {
+          "Supplier": "@constant",
+          "Category": "Product Group (Name)::1",
+          "Item": "Product Name::1",
+          "Priced By": "@constant",
+          "Pack Size (g)": "@blank",
+          "Price (£)": "Agreed Prices::1",
+          "Product Code": "Code::1",
+          "Notes": "@blank"
+        },
+        "constants": {
+          "Supplier": "Savona",
+          "Priced By": "Auto"
+        },
+        "itemPack": "Pack Size::1"
+      }
+    ]
   }
 }
