@@ -34,6 +34,10 @@
         },
         "itemPack": "Pack Size::1"
       }
-    ]
+    ],
+    "cloud": {
+      "url": "https://raxoyslyupxxvpdorvfc.supabase.co",
+      "key": "sb_publishable_Bg_HtesdhIi9DcA-jAzXuw_7iDDsv0J"
+    }
   }
 }

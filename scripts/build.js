@@ -56,6 +56,15 @@ html = html
   .replace(/<head>/i, m => m + headExtra)
   .replace(/<title>[\s\S]*?<\/title>/i, () => `<title>${esc(cfg.appName)}</title>`)
   .replace(/<\/body>(?![\s\S]*<\/body>)/i, m => bodyExtra + "\n" + m);
+// The online copy has to run inside the app's main script, because the app
+// keeps its data and functions (state, persist, renderAll...) private to that
+// script. It goes in just before the script's closing "})();".
+const MAIN_END = /(window\.addEventListener\("focus", applyBackupFlashState\);\s*\n)(\}\)\(\);\s*\n<\/script>)/g;
+const ends = html.match(MAIN_END) || [];
+if (ends.length !== 1) { console.error("app/index.html: can't find the end of the main script (found " + ends.length + ") to add the online copy"); process.exit(1); }
+const cloudSync = fs.readFileSync(path.join(root, "app", "cloud-sync.js"), "utf8");
+if (/<\/script/i.test(cloudSync)) { console.error("app/cloud-sync.js must not contain </script"); process.exit(1); }
+html = html.replace(MAIN_END, (m, a, b) => a + "\n" + cloudSync + "\n" + b);
 fs.writeFileSync(path.join(out, "index.html"), html);
 
 fs.writeFileSync(path.join(out, "client-config.js"),

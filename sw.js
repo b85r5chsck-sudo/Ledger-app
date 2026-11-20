@@ -52,7 +52,7 @@ self.addEventListener("activate", event => {
     // and every file from this site in it is one of this app's own files here.
     // A cache shared with any other app, even one in a subfolder, is kept.
     const scope = self.registration.scope;
-    const own = new Set(["", "index.html", "manifest.webmanifest", "client-config.js", "sw.js",
+    const own = new Set(["", "index.html", "manifest.webmanifest", "client-config.js", "sw.js", "cloud-sync.js",
       "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"]
       .map(f => scope + f));
     await Promise.all(keys.filter(k => k.startsWith("ledger-")).map(async k => {
