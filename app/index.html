@@ -11046,6 +11046,8 @@ function showImportReport(report){
     ["Matched by product code (renamed)", (report.items.counts.renamedByCode||[]).length],
     ["Recipes added", report.recipes.counts.added]
   ];
+  if(report.suppliers) rows.push(["Suppliers added", report.suppliers.added], ["Suppliers with details filled in", report.suppliers.updated]); // 1.0.6 — Full backup brings supplier details
+  if(report.orders) rows.push(["Saved orders added", report.orders.added]);
   // v5.3.2 — an Excel-workbook import (this modal, or the quiet background
   // sync that uses the same engine — see mergeImportedRecipes) no longer
   // overwrites a recipe it finds a same-named sheet for; it flags it
@@ -11224,6 +11226,7 @@ function runImportFromBackup(parsed){
   }
   if(pm && pm.batchCodeNext > (state.meta.batchCodeNext || 0)) state.meta.batchCodeNext = pm.batchCodeNext;
   if(pm && pm.menuCodeNext > (state.meta.menuCodeNext || 0)) state.meta.menuCodeNext = pm.menuCodeNext; // 1.0.4
+  var suppliersResult = mergeBackupSuppliers(parsed.suppliers); // 1.0.6 — before items, so items find their supplier
   var itemsById = {};
   (parsed.items||[]).forEach(function(i){ itemsById[i.id]=i; });
   var genericItems = (parsed.items||[]).map(function(i){ return i; });
@@ -11284,10 +11287,54 @@ function runImportFromBackup(parsed){
   // keeps the original overwrite-on-match behaviour, unlike every Excel
   // workbook pull above (see the note on mergeImportedRecipes, v5.3.2).
   var recipesResult = mergeImportedRecipes(genericRecipes, itemsResult.idMap, { overwriteOnMatch: true, sameLedger: sameLedger });
+  var ordersResult = mergeBackupOrders(parsed.orders);
   state.meta.lastImportedAt = new Date().toISOString();
   persist();
   renderAll();
-  showImportReport({ items:itemsResult, recipes:recipesResult, skippedSheets:[] });
+  if(typeof renderSuppliers === "function") renderSuppliers();
+  if(typeof updateTabCounts === "function") updateTabCounts();
+  showImportReport({ items:itemsResult, recipes:recipesResult, suppliers:suppliersResult, orders:ordersResult, skippedSheets:[] });
+}
+
+// 1.0.6 — a Full backup used to bring only items and recipes, so supplier
+// details (address, email, phone, account number, ordering method, notes)
+// and saved orders were left behind. Suppliers: one already here (by name,
+// after the usual redirects) gets the backup's filled-in details; one that
+// isn't here is added, unless it was deleted here on purpose (tombstone).
+function mergeBackupSuppliers(list){
+  var res = { added: 0, updated: 0 };
+  (Array.isArray(list) ? list : []).forEach(function(s){
+    if(!s || typeof s !== "object") return;
+    var name = String(s.name || "").trim();
+    if(!name || name.toLowerCase() === "unassigned") return;
+    var target = resolveSupplierRedirect(name) || name;
+    if(typeof PHANTOM_SUPPLIER_REMOVE_ONLY !== "undefined" && PHANTOM_SUPPLIER_REMOVE_ONLY.indexOf(target.toLowerCase()) >= 0) return;
+    var det = { address: s.address, email: s.email, orderingMethod: s.orderingMethod, phone: s.phone, accountNumber: s.accountNumber, notes: s.notes };
+    Object.keys(det).forEach(function(k){ det[k] = det[k] == null ? "" : String(det[k]).trim(); });
+    var rec = getSupplierByName(target);
+    if(rec){ if(fsMergeFieldsInto(rec, det)) res.updated++; return; }
+    if(tombstoned("suppliers", supplierKeyOf(target))) return;
+    fsCreateSupplier(det, target);
+    res.added++;
+  });
+  return res;
+}
+// Saved orders are snapshots with one id everywhere: one not here yet is
+// added, unless it was deleted here (shared ledger or online copy says so).
+function mergeBackupOrders(list){
+  var res = { added: 0 };
+  var have = {}; state.orders.forEach(function(o){ if(o && o.id) have[o.id] = true; });
+  var sd = state.meta.sharedDeleted || {}, sb = state.meta.sharedBase || {};
+  var cb = (state.meta.cloud && state.meta.cloud.base) || {};
+  (Array.isArray(list) ? list : []).forEach(function(o){
+    if(!o || typeof o !== "object" || !o.id || have[o.id]) return;
+    var k = "order:" + o.id;
+    if(sd[k] || sb[k] || cb[k]) return; // known here before and gone now: deleted here, so not brought back
+    state.orders.push(JSON.parse(JSON.stringify(o)));
+    have[o.id] = true;
+    res.added++;
+  });
+  return res;
 }
 
 function handleImportFile(file, kindTitle, importToken){
