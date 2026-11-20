@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger icon maker</title>
+<style>
+  :root { --bg:#f6f6f8; --card:#fff; --text:#1c1c22; --muted:#666; --line:#ddd; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#16161a; --card:#202026; --text:#eee; --muted:#aaa; --line:#333; } }
+  body { margin:0; padding:24px 16px; background:var(--bg); color:var(--text); font:15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:720px; margin:0 auto; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:16px; }
+  label { display:block; font-weight:600; margin:12px 0 4px; }
+  input[type=text] { width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); font-size:15px; }
+  .row { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; }
+  .previews { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; }
+  .previews figure { margin:0; text-align:center; font-size:12px; color:var(--muted); }
+  canvas { display:block; width:96px; height:96px; border:1px dashed var(--line); border-radius:8px; }
+  button { padding:10px 16px; border-radius:8px; border:0; background:#491eff; color:#fff; font-weight:600; font-size:15px; cursor:pointer; }
+  p.hint { color:var(--muted); font-size:13px; margin:4px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ledger icon maker</h1>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1;min-width:140px"><label for="initials">Initials</label><input id="initials" type="text" value="KL" maxlength="3"></div>
+      <div><label for="color">Colour</label><input id="color" type="color" value="#491eff"></div>
+    </div>
+    <label for="logo">Or use a logo (optional, square PNG or JPG works best)</label>
+    <input id="logo" type="file" accept="image/*">
+    <p class="hint">If you add a logo, it's used in place of the initials, on top of the chosen colour.</p>
+  </div>
+  <div class="card">
+    <div class="previews" id="previews"></div>
+    <p style="margin-top:16px"><button id="download">Download all 4 icons</button></p>
+    <p class="hint">Put the 4 files in <code>clients/&lt;client&gt;/</code> and use this colour as <code>themeColor</code> in that client's <code>client.json</code>.</p>
+  </div>
+</main>
+<script>
+  const SPECS = [
+    { file: "icon-192.png", size: 192, radius: 0.19, scale: 0.42 },
+    { file: "icon-512.png", size: 512, radius: 0.19, scale: 0.42 },
+    { file: "icon-maskable-512.png", size: 512, radius: 0, scale: 0.30 },
+    { file: "apple-touch-icon.png", size: 180, radius: 0, scale: 0.42 }
+  ];
+  let logoImg = null;
+  const $ = id => document.getElementById(id);
+
+  function draw(canvas, spec) {
+    const s = spec.size, ctx = canvas.getContext("2d");
+    canvas.width = canvas.height = s;
+    ctx.clearRect(0, 0, s, s);
+    ctx.fillStyle = $("color").value;
+    const r = spec.radius * s;
+    ctx.beginPath(); ctx.roundRect(0, 0, s, s, r); ctx.fill();
+    if (logoImg) {
+      const box = s * (spec.file.includes("maskable") ? 0.6 : 0.78);
+      const k = Math.min(box / logoImg.width, box / logoImg.height);
+      const w = logoImg.width * k, h = logoImg.height * k;
+      ctx.drawImage(logoImg, (s - w) / 2, (s - h) / 2, w, h);
+    } else {
+      ctx.fillStyle = "#fff";
+      ctx.font = `700 ${Math.round(s * spec.scale)}px -apple-system, Helvetica, Arial, sans-serif`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(($("initials").value || "").toUpperCase(), s / 2, s / 2 + s * 0.02);
+    }
+  }
+
+  function render() {
+    const wrap = $("previews"); wrap.innerHTML = "";
+    SPECS.forEach(spec => {
+      const fig = document.createElement("figure");
+      const c = document.createElement("canvas"); c.dataset.file = spec.file;
+      draw(c, spec);
+      fig.append(c, Object.assign(document.createElement("figcaption"), { textContent: spec.file }));
+      wrap.append(fig);
+    });
+  }
+
+  $("initials").addEventListener("input", render);
+  $("color").addEventListener("input", render);
+  $("logo").addEventListener("change", e => {
+    const f = e.target.files[0]; if (!f) { logoImg = null; return render(); }
+    const img = new Image(); img.onload = () => { logoImg = img; render(); };
+    img.src = URL.createObjectURL(f);
+  });
+  $("download").addEventListener("click", async () => {
+    for (const c of document.querySelectorAll("#previews canvas")) {
+      const a = document.createElement("a");
+      a.download = c.dataset.file; a.href = c.toDataURL("image/png"); a.click();
+      await new Promise(r => setTimeout(r, 250));
+    }
+  });
+  render();
+</script>
+</body>
+</html>

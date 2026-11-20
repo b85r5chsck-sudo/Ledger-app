@@ -1,0 +1,15 @@
+{
+  "appName": "Chequers Kitchen Ledger",
+  "shortName": "Ledger",
+  "initials": "KL",
+  "themeColor": "#491eff",
+  "backgroundColor": "#ffffff",
+  "brand": {
+    "client": "Chequers",
+    "appName": "Chequers Kitchen Ledger",
+    "kitchenSupplier": "CHEQUERS KITCHEN",
+    "batchCodeFirst": 67,
+    "menuCodeFirst": 10,
+    "fileStart": "chequers"
+  }
+}

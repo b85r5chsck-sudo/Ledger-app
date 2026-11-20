@@ -3,15 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Chequers Kitchen Ledger</title>
+  <title>__APP_NAME__</title>
   <!-- Installable app (PWA) -->
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#491eff">
+  <meta name="theme-color" content="__THEME_COLOR__">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Ledger">
+  <meta name="apple-mobile-web-app-title" content="__SHORT_NAME__">
+  <script src="client-config.js"></script>
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -38,7 +39,7 @@
       <div class="flex items-center space-x-2">
         <div class="avatar placeholder">
           <div class="bg-primary text-primary-content rounded-btn w-7 h-7 font-bold text-xs shadow-xs">
-            <span>KL</span>
+            <span id="brand-initials">KL</span>
           </div>
         </div>
         <span id="brand-app-name" class="font-bold text-base tracking-tight">Chequers Kitchen Ledger</span>
@@ -471,14 +472,17 @@
   </div>
 
   <script>
-    const DEFAULT_BRAND = {
+    // Per-client defaults come from clients/<name>/client.json via client-config.js
+    // (written by scripts/build.js). These values are only a fallback.
+    const CLIENT = window.LEDGER_CLIENT || {};
+    const DEFAULT_BRAND = Object.assign({
       client: "Chequers",
       appName: "Chequers Kitchen Ledger",
       kitchenSupplier: "CHEQUERS KITCHEN",
       batchCodeFirst: 67,
       menuCodeFirst: 10,
       fileStart: "chequers"
-    };
+    }, CLIENT.brand || {});
     // One fixed key so data survives app updates. Older builds used a key per
     // version (kitchen_ledger_spec_v1008 ... v1013); init() migrates the newest one.
     const STORAGE_KEY = "kitchen_ledger_data";
@@ -608,6 +612,7 @@
       const b = state.meta.brand || DEFAULT_BRAND;
       document.title = b.appName;
       document.getElementById("brand-app-name").textContent = b.appName;
+      if (CLIENT.initials) document.getElementById("brand-initials").textContent = CLIENT.initials;
       document.getElementById("kitchen-sup-label").textContent = b.kitchenSupplier;
       document.getElementById("set-appname").value = b.appName;
       document.getElementById("set-kitchensup").value = b.kitchenSupplier;
