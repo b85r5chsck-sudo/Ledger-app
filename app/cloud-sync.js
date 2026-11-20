@@ -10,14 +10,19 @@
  *   changed only online          -> taken in
  *   changed only here            -> sent up
  *   changed in both              -> this device's version is kept and sent up
- *   deleted on either side       -> deleted everywhere (a deleted row stays online)
+ *   deleted on either side       -> deleted everywhere, even if edited elsewhere
+ *                                   (a deleted row stays online)
  * "Changed" means its fingerprint differs from the last one both sides agreed
  * on (state.meta.cloud.base). That base lives inside the app's own state, so a
  * "Restore everything" brings back a base that matches the restored data and
  * never turns the restore into deletions.
  *
- * Every record has a cloudId. The first time a device meets the online copy,
- * records without one take the id of the online record with the same name.
+ * Every record has a cloudId. Records without one take the id of an online
+ * record with the same name. On a device's first sync that includes deleted
+ * ones, so an old copy of something deleted elsewhere is deleted here too.
+ *
+ * A device's ledger belongs to the first account it syncs with; signing in
+ * with another account never sends this ledger there.
  */
 (function () {
   "use strict";
@@ -88,14 +93,16 @@
   // Records made before this device met the online copy get a cloudId: the
   // id of an online record with the same name that no record here uses yet,
   // or a new one.
-  function giveIds(remoteByNk) {
+  function giveIds(live, gone) {
     var m = cloudMeta(), used = {};
     ["item", "supplier", "recipe"].forEach(function (kind) {
       LIST[kind]().forEach(function (o) { if (o.cloudId) used[kind + ":" + o.cloudId] = true; });
     });
-    var known = {}; // nk -> [ids] from the base and the rows just fetched
-    Object.keys(m.base).forEach(function (k) { var b = m.base[k]; if (b.nk) (known[k.split(":")[0] + "|" + b.nk] = known[k.split(":")[0] + "|" + b.nk] || []).push(k.slice(k.indexOf(":") + 1)); });
-    Object.keys(remoteByNk).forEach(function (k) { (known[k] = known[k] || []).push.apply(known[k], remoteByNk[k]); });
+    var known = {}; // "kind|nk" -> [ids]: live ones from the base and the rows just fetched, then deleted ones
+    function add(k, ids) { (known[k] = known[k] || []).push.apply(known[k], ids); }
+    Object.keys(m.base).forEach(function (k) { var b = m.base[k]; if (b.nk && !b.deleted) add(k.split(":")[0] + "|" + b.nk, [k.slice(k.indexOf(":") + 1)]); });
+    Object.keys(live).forEach(function (k) { add(k, live[k]); });
+    Object.keys(gone).forEach(function (k) { add(k, gone[k]); });
     var changed = false;
     ["item", "supplier", "recipe"].forEach(function (kind) {
       LIST[kind]().forEach(function (o) {
@@ -138,119 +145,178 @@
   }
 
   // ---------- talking to Supabase ----------
-  var session = null;
-  try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { session = null; }
-  function saveSession(s) { session = s; try { if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s)); else localStorage.removeItem(SESSION_KEY); } catch (e) {} }
+  // `gen` changes whenever the signed-in account changes (sign in, sign out,
+  // or another tab doing either). Work started under an older gen is dropped
+  // when it finishes, so a late reply can never undo a sign-out.
+  var session = null, gen = 0;
+  function readSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { return null; } }
+  session = readSession();
+  function storeSession(s) { session = s; try { if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s)); else localStorage.removeItem(SESSION_KEY); } catch (e) {} }
+  function signOut() { gen++; storeSession(null); }
+  function stale(g) { if (g !== gen) throw Object.assign(new Error("Signed out"), { stale: true }); }
+  window.addEventListener("storage", function (e) {
+    if (e.key !== SESSION_KEY) return;
+    var s = readSession();
+    if (!s || !session || s.uid !== session.uid) gen++;
+    session = s; draw();
+  });
 
-  function authCall(grant, body) {
+  function authCall(grant, body, g) {
     return fetch(URL_BASE + "/auth/v1/token?grant_type=" + grant, {
       method: "POST", headers: { apikey: KEY, "Content-Type": "application/json" }, body: JSON.stringify(body)
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (!r.ok || !j.access_token) { var e = new Error(j.error_description || j.msg || j.error || ("HTTP " + r.status)); e.status = r.status; throw e; }
-        saveSession({ access: j.access_token, refresh: j.refresh_token, expires: Date.now() + (j.expires_in || 3600) * 1000, email: (j.user && j.user.email) || (session && session.email) || "" });
+        stale(g);
+        var u = j.user || {};
+        storeSession({ access: j.access_token, refresh: j.refresh_token, expires: Date.now() + (j.expires_in || 3600) * 1000,
+          uid: u.id || (session && session.uid) || "", email: u.email || (session && session.email) || "" });
         return session;
       });
     });
   }
-  function token() {
+  function token(g) {
+    stale(g);
     if (!session) return Promise.reject(Object.assign(new Error("Not signed in"), { status: 401 }));
     if (Date.now() < session.expires - 60000) return Promise.resolve(session.access);
-    return authCall("refresh_token", { refresh_token: session.refresh }).then(function (s) { return s.access; })
-      .catch(function (e) { if (e.status === 400 || e.status === 401) saveSession(null); throw e; });
+    return authCall("refresh_token", { refresh_token: session.refresh }, g).then(function (s) { return s.access; })
+      .catch(function (e) { if ((e.status === 400 || e.status === 401) && g === gen) signOut(); throw e; });
   }
-  function api(path, opts) {
-    return token().then(function (t) {
+  function api(path, opts, g) {
+    return token(g).then(function (t) {
       var h = Object.assign({ apikey: KEY, Authorization: "Bearer " + t, "Content-Type": "application/json" }, (opts && opts.headers) || {});
       return fetch(TABLE + path, Object.assign({}, opts, { headers: h }));
     }).then(function (r) {
-      if (r.status === 401) saveSession(null);
+      if (r.status === 401 && g === gen) signOut();
       if (!r.ok) return r.text().then(function (t) { var e = new Error("HTTP " + r.status + " " + t.slice(0, 200)); e.status = r.status; throw e; });
-      return r.status === 204 ? null : r.json();
+      stale(g);
+      return r.text().then(function (t) { return t ? JSON.parse(t) : null; }); // an upload answers with no body
     });
   }
-  function pullSince(rev) {
+  function pullSince(rev, g) {
     var rows = [];
     function page(after) {
-      return api("?select=kind,key,data,fp,deleted,rev,updated_by&rev=gt." + after + "&order=rev.asc&limit=1000").then(function (got) {
+      return api("?select=kind,key,data,fp,deleted,rev,updated_by&rev=gt." + after + "&order=rev.asc&limit=1000", null, g).then(function (got) {
         rows = rows.concat(got);
         return got.length === 1000 ? page(got[got.length - 1].rev) : rows;
       });
     }
     return page(rev);
   }
-  function push(rows) {
-    if (!rows.length) return Promise.resolve();
-    var chunks = []; for (var i = 0; i < rows.length; i += 500) chunks.push(rows.slice(i, i + 500));
+  // Sends the changes in batches. Each change's new agreed state is only
+  // recorded once its batch has been accepted, so anything that didn't go up
+  // is tried again next time.
+  function push(out, base, g) {
+    var chunks = []; for (var i = 0; i < out.length; i += 500) chunks.push(out.slice(i, i + 500));
     return chunks.reduce(function (p, c) {
       return p.then(function () {
-        return api("?on_conflict=owner,kind,key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(c) });
+        return api("?on_conflict=owner,kind,key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+          body: JSON.stringify(c.map(function (x) { return x.row; })) }, g)
+          .then(function () { c.forEach(function (x) { base[x.k] = x.nb; }); });
       });
     }, Promise.resolve());
   }
 
+  // Ingredients and finished items that came in before their item did are
+  // linked once the item is here.
+  function relink() {
+    if (typeof resolveSharedItemRef !== "function") return;
+    state.recipes.forEach(function (r) {
+      (r.ingredients || []).forEach(function (g) { if (!g.itemId && g.sharedRef) { var id = resolveSharedItemRef(g.sharedRef); if (id) { g.itemId = id; delete g.customName; delete g.sharedRef; g.customCostPerGramOrEach = null; } } });
+      if (!r.completedItemId && r.sharedCompleted) { var cid = resolveSharedItemRef(r.sharedCompleted); if (cid) { r.completedItemId = cid; delete r.sharedCompleted; } }
+    });
+  }
+
   // ---------- one sync ----------
-  var running = null, again = false, status = { state: "idle", at: null, error: "" };
+  var running = null, queued = null, status = { state: "idle", at: null, error: "" };
+  var APPLY_ORDER = { item: 0, supplier: 1, recipe: 2, order: 3 };
+
+  // This device's ledger belongs to one online account. Another account's
+  // sign-in never syncs it, so one business's data can't go to another.
+  function accountProblem(m) {
+    if (!session) return "";
+    if (m.accountId) return m.accountId === session.uid ? "" : (m.account || "another account");
+    if (m.account && m.account !== session.email) return m.account; // linked before ids were kept
+    return "";
+  }
 
   function syncOnce() {
-    if (running) { again = true; return running; }
+    // already syncing: one more sync follows it, and the caller waits for that
+    if (running) { if (!queued) queued = running.then(function () { queued = null; return syncOnce(); }); return queued; }
     if (!session) { setStatus("signed-out"); return Promise.resolve(); }
     if (typeof navigator !== "undefined" && navigator.onLine === false) { setStatus("offline"); return Promise.resolve(); }
+    var m = cloudMeta(), g = gen;
+    var other = accountProblem(m);
+    if (other) { setStatus("error", "This device's ledger is linked to " + other + ". Sign out and sign in with that account."); return Promise.resolve(); }
+    if (!m.accountId && session.uid) { m.accountId = session.uid; m.account = session.email; }
     setStatus("syncing");
-    var m = cloudMeta();
-    running = pullSince(m.lastRev).then(function (rows) {
-      // first meetings: give local records the ids of same-named online ones
-      var remoteByNk = {};
+    var changed = false, applied = 0, conflicts = 0, sent = 0;
+    running = pullSince(m.lastRev, g).then(function (rows) {
+      stale(g);
+      var firstMeeting = !m.lastRev;
+      // first meetings: give local records the ids of same-named online ones,
+      // live ones first, then (on this device's very first sync) deleted ones
+      var live = {}, gone = {};
       rows.forEach(function (r) {
-        if (r.deleted || !r.data || r.kind === "order" || !NAMEKEY[r.kind]) return;
-        var k = r.kind + "|" + NAMEKEY[r.kind](r.data); (remoteByNk[k] = remoteByNk[k] || []).push(r.key);
+        if (r.kind === "order" || !NAMEKEY[r.kind]) return;
+        var nk = r.deleted ? (r.data && r.data.nk) : (r.data ? NAMEKEY[r.kind](r.data) : null);
+        if (!nk || (r.deleted && !firstMeeting)) return;
+        var map = r.deleted ? gone : live, k = r.kind + "|" + nk;
+        (map[k] = map[k] || []).push(r.key);
       });
-      var idsGiven = giveIds(remoteByNk);
-      var local = snapshot(), base = m.base, applied = 0, conflicts = 0, maxRev = m.lastRev;
+      if (giveIds(live, gone)) changed = true;
+      var local = snapshot(), base = m.base, maxRev = m.lastRev;
       var latest = {}; rows.forEach(function (r) { latest[r.kind + ":" + r.key] = r; if (r.rev > maxRev) maxRev = r.rev; });
 
-      // 1. online changes
-      Object.keys(latest).forEach(function (k) {
-        var r = latest[k]; if (KINDS.indexOf(r.kind) < 0) return;
-        var b = base[k], l = local[k];
-        if (r.fp === (b && b.fp) && !(r.deleted && l)) return; // nothing new online
-        var localChanged = l ? (!b || l.fp !== b.fp) : false;
-        if (l && r.deleted === false && l.fp === r.fp) { base[k] = { fp: r.fp, nk: l.nk }; return; } // already the same
-        if (localChanged && b) { conflicts++; return; }                // changed in both: keep this device's
-        if (localChanged && !b && !r.deleted) { conflicts++; return; } // both made it: this device's copy wins
-        applyRemote(r, l); applied++;
-        if (r.deleted) base[k] = { fp: r.fp, nk: null, deleted: true };
-      });
+      // 1. online changes (items before recipes, so ingredients can link)
+      Object.keys(latest).filter(function (k) { return KINDS.indexOf(latest[k].kind) >= 0; })
+        .sort(function (a, b) { return APPLY_ORDER[latest[a].kind] - APPLY_ORDER[latest[b].kind]; })
+        .forEach(function (k) {
+          var r = latest[k], b = base[k], l = local[k];
+          var rfp = r.deleted ? "deleted" : r.fp, bfp = b ? (b.deleted ? "deleted" : b.fp) : null;
+          if (rfp === bfp) return; // nothing new online
+          if (r.deleted) { // a deletion wins over an edit made here
+            if (l) { applyRemote(r, l); applied++; }
+            base[k] = { fp: "deleted", nk: (r.data && r.data.nk) || (b && b.nk) || (l && l.nk) || null, deleted: true };
+            changed = true; return;
+          }
+          if (!l && b && !b.deleted) return; // deleted here: the deletion goes up below
+          if (l && l.fp === r.fp) { base[k] = { fp: r.fp, nk: l.nk }; changed = true; return; } // already the same
+          if (l && (!b || b.deleted || l.fp !== b.fp)) { conflicts++; return; } // changed here too: this device's version goes up below
+          applyRemote(r, l); applied++; changed = true;
+          base[k] = { fp: r.fp, nk: NAMEKEY[r.kind](r.data) };
+        });
+      if (applied) relink();
+      if (maxRev !== m.lastRev) { m.lastRev = maxRev; changed = true; }
 
-      // 2. this device's changes and deletions
+      // 2. this device's changes and deletions, compared with the agreed state
       var now = snapshot(), out = [];
       Object.keys(now).forEach(function (k) {
         var n = now[k], b = base[k];
         if (b && !b.deleted && b.fp === n.fp) return;
-        if (latest[k] && !latest[k].deleted && latest[k].fp === n.fp) { base[k] = { fp: n.fp, nk: n.nk }; return; }
-        out.push({ kind: n.kind, key: n.id, data: n.data, fp: n.fp, deleted: false, updated_by: computer() });
-        base[k] = { fp: n.fp, nk: n.nk };
+        out.push({ k: k, nb: { fp: n.fp, nk: n.nk },
+          row: { kind: n.kind, key: n.id, data: n.data, fp: n.fp, deleted: false, updated_by: computer() } });
       });
       Object.keys(base).forEach(function (k) {
         var b = base[k]; if (b.deleted || now[k]) return;
         var kind = k.slice(0, k.indexOf(":")), id = k.slice(k.indexOf(":") + 1);
-        out.push({ kind: kind, key: id, data: null, fp: "deleted", deleted: true, updated_by: computer() });
-        base[k] = { fp: "deleted", nk: null, deleted: true };
+        out.push({ k: k, nb: { fp: "deleted", nk: b.nk || null, deleted: true },
+          row: { kind: kind, key: id, data: b.nk ? { nk: b.nk } : null, fp: "deleted", deleted: true, updated_by: computer() } });
       });
-
-      return push(out).then(function () {
-        m.lastRev = maxRev;
-        if (applied || idsGiven || out.length || rows.length) {
-          quietPersist();
-          if (applied) { try { renderAll(); } catch (e) {} }
-        }
-        setStatus("synced", "", { applied: applied, sent: out.length, conflicts: conflicts });
-      });
-    }).catch(function (e) {
+      sent = out.length;
+      if (out.length) changed = true;
+      return push(out, base, g);
+    }).then(function () {
+      setStatus("synced", "", { applied: applied, sent: sent, conflicts: conflicts });
+    }, function (e) {
+      if (e && e.stale) return;
       setStatus(session ? "error" : "signed-out", e && e.message ? e.message : String(e));
     }).then(function () {
+      if (changed) { // saved even after a sign-out, so the ledger and its agreed state stay together
+        quietPersist();
+        if (applied) { try { renderAll(); } catch (e) {} }
+      }
       running = null;
-      if (again) { again = false; setTimeout(syncOnce, 0); }
     });
     return running;
   }
@@ -317,7 +383,7 @@
       box.querySelector("b").textContent = session.email || "";
       box.querySelector(".err").textContent = status.error || "";
       box.querySelector('[data-a="now"]').onclick = function () { close(); syncOnce(); };
-      box.querySelector('[data-a="out"]').onclick = function () { saveSession(null); close(); setStatus("signed-out"); };
+      box.querySelector('[data-a="out"]').onclick = function () { signOut(); close(); setStatus("signed-out"); };
     } else {
       box.innerHTML = '<h3 style="margin:0 0 8px;font-size:16px">Sign in to the online copy</h3>' +
         '<p style="margin:0 0 12px;color:#555">Use your business\'s ledger sign-in. Every device signed in with it shares the same items, suppliers, recipes and orders.</p>' +
@@ -330,14 +396,16 @@
       form.onsubmit = function (e) {
         e.preventDefault();
         var err = box.querySelector(".err"); err.textContent = "Signing in…"; err.style.color = "#555";
-        authCall("password", { email: form.e.value.trim(), password: form.p.value }).then(function (sess) {
-          // a different sign-in is a different business: start its sync afresh
-          var m = cloudMeta();
-          if (m.account !== sess.email) { m.base = {}; m.lastRev = 0; m.account = sess.email; quietPersist(); }
+        var g = ++gen;
+        authCall("password", { email: form.e.value.trim(), password: form.p.value }, g).then(function () {
+          var other = accountProblem(cloudMeta());
+          if (other) { signOut(); throw Object.assign(new Error(""), { other: other }); }
           close(); setStatus("idle"); syncOnce();
         }).catch(function (x) {
+          if (x && x.stale) return;
           err.style.color = "#b91c1c";
-          err.textContent = x.status === 400 ? "That email and password didn't match. Check them and try again." : "Couldn't reach the online copy. Check the internet connection and try again.";
+          err.textContent = x.other ? "This device's ledger is linked to " + x.other + ", so it can't sync with a different account. Sign in with that account."
+            : x.status === 400 ? "That email and password didn't match. Check them and try again." : "Couldn't reach the online copy. Check the internet connection and try again.";
         });
       };
     }
@@ -347,7 +415,7 @@
   }
 
   // ---------- start ----------
-  window.klCloud = { sync: syncOnce, status: function () { return Object.assign({ signedIn: !!session }, status); }, signOut: function () { saveSession(null); draw(); } };
+  window.klCloud = { sync: syncOnce, status: function () { return Object.assign({ signedIn: !!session }, status); }, signOut: function () { signOut(); setStatus("signed-out"); } };
   function start() {
     addChip();
     syncOnce();
