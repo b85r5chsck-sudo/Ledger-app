@@ -35,7 +35,13 @@ There are no dependencies to install. Every build gets a new cache version, so i
 - Mac / Windows (Chrome or Edge): the install icon in the address bar
 - Mac (Safari 17+): File, then Add to Dock
 
-Data is stored on each device. To move it to another device, use the app's JSON backup export and import.
+Data is stored on each device. With the online copy turned on (below), every device that signs in shares the same data.
+
+## First-time setup on a new iPad, iPhone or browser
+1. On a desktop computer with up-to-date data, press **Back up now**. The backup (.json) is saved in Documents > Backups > JSON.
+2. Open the web app on the new device and add it to the home screen (see above).
+3. If the business already uses the online copy, tap **☁ Online copy** and sign in. Everything comes in by itself; no files are needed.
+4. If not: copy the backup to the device (AirDrop, Files or email), press **Import** and pick it. Items, prices, recipes, suppliers with all their details (address, email, phone, account number, ordering method, notes) and saved orders come in. Then tap **☁ Online copy** and sign in so it stays up to date.
 
 ## Online copy (optional, per client)
 
@@ -54,3 +60,26 @@ Setting up a client's Supabase project:
 On each device, tap the "☁ Online copy" chip next to the status pill to sign in.
 A device's ledger stays linked to the first account it syncs with.
 `app/cloud-sync.js` is built into the end of the app's main script by `scripts/build.js`.
+
+From desktop 1.0.6 the desktop app has the online copy too: sign in with the same
+"☁ Online copy" chip, and the desktops and the iPads/web app share changes about every
+30 seconds. The desktops still keep the ledger on the network drive up to date as before.
+The desktop page (`app/index.html` from desktop 1.0.6 on) already contains the online copy
+between `// ==== BEGIN online copy` and `// ==== END online copy ====`; the build swaps that
+block for this repository's `app/cloud-sync.js`, so it is never added twice.
+
+## Desktop app updates (from desktop 1.0.6)
+
+The desktop app checks `https://<site>/desktop/update.json` (its `brand.json` "updates"
+address) when it opens and every few hours. When a newer signed page is published it shows
+an **Update available** box with **Update now** and **Later**; Update now saves to the linked
+files and restarts on the new version. Help > Check for updates… checks straight away, and
+Help > Go back to the built-in version… undoes an update on that computer. Until an update
+is published, Check for updates says "You're on the latest version".
+
+To publish one, make it with the desktop project's `tools/update-signing/make-release.js`
+(its README has the steps) and put the two files it writes, `update.json` and
+`index-<version>.html`, in this repository's `desktop/` folder. The build copies only those
+into `dist/desktop/`. Every update is signed with a private key that is kept only on the
+developer's Mac, never in this repository; the desktop app checks the signature and the
+file's SHA-256 before using it, and ignores anything else.

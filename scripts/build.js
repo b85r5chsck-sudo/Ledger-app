@@ -60,12 +60,24 @@ html = html
 // keeps its data and functions (state, persist, renderAll...) private to that
 // script. It goes in just before the script's closing "})();".
 const MAIN_END = /(window\.addEventListener\("focus", applyBackupFlashState\);\s*\n)(\}\)\(\);\s*\n<\/script>)/g;
+// 1.0.6: the desktop page may already carry the online copy (between "BEGIN online copy" and
+// "END online copy"); it is then replaced with this repository's app/cloud-sync.js, never added twice.
+html = html.replace(/\r?\n\/\/ ==== BEGIN online copy[^\r\n]*\r?\n[\s\S]*?\r?\n\/\/ ==== END online copy ====\r?\n/, "\n");
+if (/BEGIN online copy|END online copy/.test(html)) { console.error("app/index.html: the online copy markers are damaged"); process.exit(1); }
 const ends = html.match(MAIN_END) || [];
 if (ends.length !== 1) { console.error("app/index.html: can't find the end of the main script (found " + ends.length + ") to add the online copy"); process.exit(1); }
 const cloudSync = fs.readFileSync(path.join(root, "app", "cloud-sync.js"), "utf8");
 if (/<\/script/i.test(cloudSync)) { console.error("app/cloud-sync.js must not contain </script"); process.exit(1); }
 html = html.replace(MAIN_END, (m, a, b) => a + "\n" + cloudSync + "\n" + b);
 fs.writeFileSync(path.join(out, "index.html"), html);
+
+// 1.0.6: signed desktop page updates (made by the desktop project's tools/update-signing/make-release.js),
+// served at /desktop/update.json. Only update.json and index-<version>.html are copied.
+const desk = path.join(root, "desktop");
+if (fs.existsSync(desk)) {
+  fs.mkdirSync(path.join(out, "desktop"), { recursive: true });
+  for (const f of fs.readdirSync(desk)) if (f === "update.json" || /^index-\d+\.\d+\.\d+\.html$/.test(f)) fs.copyFileSync(path.join(desk, f), path.join(out, "desktop", f));
+}
 
 fs.writeFileSync(path.join(out, "client-config.js"),
   `window.LEDGER_CLIENT = ${JSON.stringify(cfg, null, 2)};\n` +
