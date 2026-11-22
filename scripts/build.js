@@ -76,7 +76,12 @@ fs.writeFileSync(path.join(out, "index.html"), html);
 const desk = path.join(root, "desktop");
 if (fs.existsSync(desk)) {
   fs.mkdirSync(path.join(out, "desktop"), { recursive: true });
-  for (const f of fs.readdirSync(desk)) if (f === "update.json" || /^index-\d+\.\d+\.\d+\.html$/.test(f)) fs.copyFileSync(path.join(desk, f), path.join(out, "desktop", f));
+  for (const f of fs.readdirSync(desk)) if (f === "update.json" || /^index-\d+\.\d+\.\d+\.html$/.test(f)) {
+    fs.copyFileSync(path.join(desk, f), path.join(out, "desktop", f));
+    // also as .page: Cloudflare redirects .html addresses, and functions/desktop/[file].js
+    // serves this copy at the .html address instead, so the app's download isn't redirected
+    if (f !== "update.json") fs.copyFileSync(path.join(desk, f), path.join(out, "desktop", f.replace(/\.html$/, ".page")));
+  }
 }
 
 fs.writeFileSync(path.join(out, "client-config.js"),
