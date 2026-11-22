@@ -4150,7 +4150,7 @@ async function buildStandaloneRecipeXlsxBuffer(sheetName, fields){
    time that field changes — that's the only place this needs
    updating; both About surfaces pick it up automatically.
    ============================================================ */
-var APP_VERSION = "1.0.6";
+var APP_VERSION = "1.0.7";
 // Shown after the version (e.g. " TRIAL" on trial builds); empty on the real app.
 var APP_VERSION_TAG = "";
 // Build number, per the user: six characters, digit-letter-digit-digit-
@@ -4160,6 +4160,7 @@ var APP_VERSION_TAG = "";
 // starts again at A1 (5.7.9 -> 5G09A1, 5.8.0 -> 5H00A1).
 var APP_BUILD = ""; // from V6.0.1, per the user: no build numbers, each new build is the next patch version
 var CHANGELOG = [ // 1.0.0 — per Simon: the history starts again here, newest first
+  { version: "1.0.7", note: "Fixed: the ledger check now reads sub-headings that were recoloured in Excel (for example grey instead of blue), so items no longer show as being under a different sub-heading. “Keep the app\u2019s sub-heading” no longer adds rows to the ledger when it can\u2019t read a sub-heading, and says plainly if an item couldn\u2019t be moved. New in the ledger check: repeated sub-headings with nothing under them can be tidied back to blank spare rows (a copy of the ledger is saved first)." },
   { version: "1.0.6", note: "New: Updates without a new installer. When a newer version is ready, a box at the top right says so: press Update now and the app saves, then restarts on it. Every update is checked before it is used, and Help \u203a Go back to the built-in version undoes one. New: Online copy. Sign in with \u2601 Online copy (next to the status at the top) and this computer shares its items, suppliers, recipes and saved orders with the iPads, iPhones and web app, about every 30 seconds. The ledger on the network drive works as before. A full backup (.json) now brings in suppliers\u2019 details (address, email, phone, account number, ordering method and notes) and saved orders too, not just items and recipes. Links in the app only ever open web pages, email or phone numbers." },
   { version: "1.0.5", note: "New: Your files. When the ledger, Master Order File or Menu Backup isn\u2019t linked, or can\u2019t be found, the app says so when it opens and helps put it right: it makes the file next to the ledger and links it, or helps you find it, or shows how to make it yourself. The Menu Backup can wait (Not now asks again in a week). Where files are has a Set up button for the same thing. A new business can keep its files on just this computer, in Documents. Recipe search: the drop-down now lists every match, not just the first 8, and the arrow keys go through them all. One Import button: pick any file and the app works out what it is (a backup, a ledger, a price list, a supplier\u2019s own file, suppliers, order history or Menu Backup recipes). It only asks when it can\u2019t be sure, and then only between the two likeliest kinds. Supplier file layouts a business starts with now come from its own settings, not the app." },
   { version: "1.0.4", note: "New: Menu Item Recipes have their own code too, M0010 upwards, kept the same way as a Batch Recipe\u2019s C-code; search finds a recipe by it. The app now names its files after the business: the ledger, Master Order File and Menu Backup are copied once to their new names next to the old ones and used from then on, and other computers follow by themselves. A new business is set up from the app: it makes the three files in one folder on the network drive." },
@@ -9565,14 +9566,23 @@ function fillKindAt(ws, r, c){
   if(!cell || !cell.s || !cell.s.fgColor) return "plain";
   var fg = cell.s.fgColor;
   if(fg.theme === 3) return "blue";
-  var rgb = fg.rgb ? String(fg.rgb).toUpperCase() : null;
+  var rgb = fg.rgb ? String(fg.rgb).toUpperCase() : null, shaded = false;
   if(rgb && rgb.length >= 6){
     var hex = rgb.length === 8 ? rgb.slice(2) : rgb; // strip a leading alpha byte (ARGB) if present
     var r8 = parseInt(hex.substr(0,2),16), g8 = parseInt(hex.substr(2,2),16), b8 = parseInt(hex.substr(4,2),16);
     if(!isNaN(r8) && !isNaN(g8) && !isNaN(b8)){
       if(r8>200 && g8>200 && b8<120) return "yellow";
       if(b8>150 && b8>r8+20) return "blue";
+      shaded = !(r8 >= 250 && g8 >= 250 && b8 >= 250); // any colour but white
     }
+  } else if(fg.theme != null) shaded = fg.theme !== 1 && !(fg.theme === 0 && !(fg.tint < 0)); // theme 0 is white unless darkened
+  // 1.0.7 — a sub-heading recoloured in Excel (grey, green…): a coloured column-B cell with nothing in the item
+  // columns (C to G) is still a sub-heading; an item row always has a price or a choice in them
+  if(shaded && c === 1){
+    var bt = cell.v == null ? "" : String(cell.v).trim();
+    if(!bt || bt !== bt.toUpperCase() || !/[A-Z]/.test(bt)) return "plain"; // sub-headings are in capitals; items mostly aren't
+    for(var cc = 2; cc <= 6; cc++){ var o = ws[XLSX.utils.encode_cell({r:r, c:cc})]; if(o && o.v != null && String(o.v).trim() !== "") return "plain"; }
+    return "blue";
   }
   return "plain";
 }
@@ -15419,6 +15429,11 @@ function planLedgerAdditions(plan, sheetName, ws, keysOnSheet){
     var lc = txt(mv.to).toLowerCase();
     var heads = rowsInfo.filter(function(ri){ return ri.isCategory && ri.supRow === src.supRow && txt(ri.b).toLowerCase() === lc; });
     if(heads.length > 1){ moveFail(mv, "\u201c" + mv.to + "\u201d is in its supplier block more than once"); return; }
+    // 1.0.7 — the block already has a row with that name that isn't read as a sub-heading (its look was changed in
+    // Excel): adding another would only add rows the next check can't read either, so nothing is moved
+    if(!heads.length && rowsInfo.some(function(ri){ return ri.supRow === src.supRow && !ri.isSupplier && ri.r !== mv.row && txt(ri.b).toLowerCase() === lc && val(ri.r, G) === "" && val(ri.r, C) === "" && val(ri.r, D) === ""; })){ // an unpriced row with that name: a sub-heading the app can't read
+      moveFail(mv, "its supplier block already has a \u201c" + mv.to + "\u201d row the app can't read as a sub-heading"); return;
+    }
     if(!heads.length){
       // V6.2.3 — per the user: the sub-heading isn't in this block yet, so it
       // is added at the end of the block and the item goes under it (several
@@ -20504,7 +20519,8 @@ function healthWorkerMain(){
         var th = /theme="(\d+)"/.exec(fg[1]), rg = /rgb="([0-9A-Fa-f]+)"/.exec(fg[1]);
         if(th && th[1] === "3") k = "blue";
         else if(rg){ var h = rg[1].slice(-6), r8 = parseInt(h.substr(0,2),16), g8 = parseInt(h.substr(2,2),16), b8 = parseInt(h.substr(4,2),16);
-          if(r8>200 && g8>200 && b8<120) k = "yellow"; else if(b8>150 && b8>r8+20) k = "blue"; }
+          if(r8>200 && g8>200 && b8<120) k = "yellow"; else if(b8>150 && b8>r8+20) k = "blue"; else if(!(r8 >= 250 && g8 >= 250 && b8 >= 250)) k = "shade"; }
+        else if(th && th[1] !== "1" && !(th[1] === "0" && !/tint="-/.test(fg[1]))) k = "shade"; // 1.0.7 — any colour but white
       }
       kinds.push(k); return "";
     });
@@ -20515,7 +20531,7 @@ function healthWorkerMain(){
       if(/\bt="inlineStr"/.test(attrs)){ var t=""; inner.replace(/<t[^>]*>([^<]*)<\/t>/g, function(_, x){ t += x; return ""; }); return unesc(t); }
       if(/\bt="(str|e)"/.test(attrs)) return v ? unesc(v[1]) : "";
       if(/\bt="b"/.test(attrs)) return v ? v[1] === "1" : "";
-      return v ? Number(v[1]) : "";
+      return v && v[1] !== "" ? Number(v[1]) : ""; // 1.0.7 — an empty <v></v> is blank, not 0
     }
 
     // ---- Order_Sheet: one pass over the rows, keeping only columns B, C, D, G and whether P has a formula ----
@@ -20532,10 +20548,14 @@ function healthWorkerMain(){
         if(col === "B"){ rec.B = String(cellVal(c[2], c[3])).trim(); var s = /\bs="(\d+)"/.exec(c[2]); rec.kind = s ? (kinds[+s[1]]||"plain") : "plain"; }
         else if(col === "C") rec.C = cellVal(c[2], c[3]);
         else if(col === "D") rec.D = cellVal(c[2], c[3]);
+        else if(col === "E") rec.E = cellVal(c[2], c[3]);
+        else if(col === "F") rec.F = cellVal(c[2], c[3]);
         else if(col === "G") rec.G = cellVal(c[2], c[3]);
         else if(col === "P"){ rec.P = /<f[ >]/.test(c[3]||""); rec.Pv = cellVal(c[2], c[3]); }
         else if(colN(col) > 16) break;
       }
+      // 1.0.7 — a sub-heading recoloured in Excel: coloured, and nothing in the item columns
+      if(rec.kind === "shade"){ rec.kind = rec.B && rec.B === rec.B.toUpperCase() && /[A-Z]/.test(rec.B) && ["C","D","E","F","G"].every(function(k){ return String(rec[k] == null ? "" : rec[k]).trim() === ""; }) ? "blue" : "plain"; if(rec.kind === "blue") rec.shadeHead = true; }
       rows.push(rec);
     }
     var dvXml = os.slice(os.lastIndexOf("</sheetData>"));
@@ -20645,6 +20665,41 @@ function healthWorkerMain(){
       add("Items","dupcode-"+k2, g.length + " items from " + g[0].supplier + " share code " + g[0].productCode,
         g.map(function(x){ return "\u201c" + x.name + "\u201d"; }).join(", ") + ". The ledger sync treats items with the same code as one renamed item and can merge them. How to fix: give each its own code in the Code column on the Order Sheet (or clear the wrong one).");
     });
+    // 1.0.7 — a sub-heading repeated in its supplier block with nothing under it (left by an earlier
+    // version's "Keep the app's sub-heading" when it couldn't read the ledger's sub-headings): its row is
+    // cleared back to a blank spare row. The copy with items under it (or else the first) is kept.
+    supRows.forEach(function(s, si){
+      var end = si + 1 < supRows.length ? supRows[si + 1].r - 1 : lastUsed, heads = [];
+      rows.forEach(function(rw){ if(rw.r > s.r && rw.r <= end && rw.kind === "blue" && rw.B) heads.push({ r: rw.r, name: rw.B }); });
+      if(heads.length < 2) return;
+      // anything with a name under it (an item, even one with no price yet) means it isn't an empty copy
+      heads.forEach(function(hd, hi){ var stop = hi + 1 < heads.length ? heads[hi + 1].r - 1 : end, under = rows.filter(function(rw){ return rw.r > hd.r && rw.r <= stop; });
+        hd.items = under.filter(function(rw){ return rw.B; }).length;
+        // an empty copy has spare rows under it (a tiny placeholder price and nothing else); an item that happens to look like a heading doesn't
+        hd.spareOnly = under.length > 0 && under.every(function(rw){ return !rw.B && String(rw.C).trim() === "" && String(rw.D).trim() === "" && (rw.G === "" || (typeof rw.G === "number" && rw.G > 0 && rw.G < 0.001)); }) && under.some(function(rw){ return rw.G !== ""; }); });
+      var byName = {}, junk = [];
+      heads.forEach(function(hd){ (byName[hd.name.toLowerCase()] = byName[hd.name.toLowerCase()] || []).push(hd); });
+      Object.keys(byName).forEach(function(nm){
+        var g = byName[nm]; if(g.length < 2) return;
+        var keep = g.filter(function(x){ return x.items > 0; })[0] || g[0];
+        // never a row named like one of this supplier's items in the app: that could be an item, not a heading
+        if(app.items.some(function(it){ return ikey(it.supplier) === ikey(s.name) && String(it.name || "").trim().toLowerCase() === nm; })) return;
+        g.forEach(function(x){ if(x !== keep && x.items === 0 && x.spareOnly) junk.push(x); });
+      });
+      if(!junk.length) return;
+      // a row read as a heading only because of its colour could be an item: those are only tidied when they are part of
+      // a repeated set (at least two different sub-heading names repeated), which a stray item can't look like
+      var shadeRows = {}; rows.forEach(function(rw){ if(rw.shadeHead) shadeRows[rw.r] = true; });
+      var shadeNames = {}; junk.forEach(function(x){ if(shadeRows[x.r]) shadeNames[x.name.toLowerCase()] = 1; }); // only the colour-read ones count
+      if(Object.keys(shadeNames).length < 2) junk = junk.filter(function(x){ return !shadeRows[x.r]; });
+      if(!junk.length) return;
+      junk.sort(function(a, b){ return a.r - b.r; });
+      var names = {}; junk.forEach(function(x){ names[x.r] = x.name; });
+      add("Items", "dupheads-" + skey(s.name), s.name + ": " + junk.length + " repeated sub-heading" + (junk.length === 1 ? "" : "s") + " with nothing under " + (junk.length === 1 ? "it" : "them"),
+        "Order_Sheet rows " + junk.slice(0, 8).map(function(x){ return x.r; }).join(", ") + (junk.length > 8 ? " and " + (junk.length - 8) + " more" : "") + ".",
+        { simple: false, fp: junk.map(function(x){ return [x.r, x.name]; }), ops: [{ kind: "clearHeads", rows: junk.map(function(x){ return x.r; }), names: names }], label: "Tidy " + (junk.length === 1 ? "it" : "them"),
+          explain: "Clears the " + junk.length + " repeated sub-heading row" + (junk.length === 1 ? "" : "s") + " under " + s.name + " back to blank spare rows. The sub-headings with items under them, and every item, stay exactly as they are. A copy of the ledger is saved first." });
+    });
     // 6.2.4 — a supplier heading with nothing under it, for a supplier the app doesn't have
     var emptyHead = {};
     if(app.supplierKeys){
@@ -20653,7 +20708,7 @@ function healthWorkerMain(){
         if(!spareTpl || app.supplierKeys[ikey(s.name)]) return;
         var end = si + 1 < supRows.length ? supRows[si + 1].r - 1 : lastUsed;
         if(ledgerItems.some(function(it){ return it.r > s.r && it.r <= end; })) return;
-        if(rows.some(function(rw){ return rw.r > s.r && rw.r <= end && rw.B && rw.kind !== "blue" && !/^items?$/i.test(rw.B); })) return;
+        if(rows.some(function(rw){ return rw.r > s.r && rw.r <= end && rw.B && (rw.kind !== "blue" || rw.shadeHead) && !/^items?$/i.test(rw.B); })) return; // 1.0.7 — a recoloured heading might be an item: not cleared
         emptyHead[skey(s.name)] = 1;
         add("Drop-downs", "emptyblock-" + skey(s.name), "Supplier heading \u201c" + s.name + "\u201d has no items and isn't in the app", "Order_Sheet row" + (end > s.r ? "s " + s.r + " to " + end : " " + s.r) + ".",
           { simple: false, fp: [s.name, s.r, end, spareTpl], ops: [{ kind: "clearBlock", rows: [s.r], expect: s.name, end: end, tpl: spareTpl }, { kind: "rebuildLists" }], label: "Clear the heading",
@@ -20872,7 +20927,8 @@ function healthWorkerMain(){
     var kinds = []; ((/<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/.exec(sty)||[,""])[1]).replace(/<xf ([^>]*?)\/?>/g, function(_, a){
       var m = /fillId="(\d+)"/.exec(a), f = m ? fills[+m[1]] || "" : "", k = "plain", fg = /<fgColor ([^/]*)\/>/.exec(f);
       if(fg && f.indexOf('patternType="none"') < 0){ var th = /theme="(\d+)"/.exec(fg[1]), rg = /rgb="([0-9A-Fa-f]+)"/.exec(fg[1]);
-        if(th && th[1] === "3") k = "blue"; else if(rg){ var h = rg[1].slice(-6), r8 = parseInt(h.substr(0,2),16), g8 = parseInt(h.substr(2,2),16), b8 = parseInt(h.substr(4,2),16); if(r8>200 && g8>200 && b8<120) k = "yellow"; else if(b8>150 && b8>r8+20) k = "blue"; } }
+        if(th && th[1] === "3") k = "blue"; else if(rg){ var h = rg[1].slice(-6), r8 = parseInt(h.substr(0,2),16), g8 = parseInt(h.substr(2,2),16), b8 = parseInt(h.substr(4,2),16); if(r8>200 && g8>200 && b8<120) k = "yellow"; else if(b8>150 && b8>r8+20) k = "blue"; else if(!(r8 >= 250 && g8 >= 250 && b8 >= 250)) k = "shade"; }
+        else if(th && th[1] !== "1" && !(th[1] === "0" && !/tint="-/.test(fg[1]))) k = "shade"; } // 1.0.7 — any colour but white
       kinds.push(k); return ""; });
     function cellText(attrs, inner){
       inner = inner || ""; var v = /<v>([^<]*)<\/v>/.exec(inner);
@@ -20882,8 +20938,17 @@ function healthWorkerMain(){
     }
     var os = await text(OSP), changed = {}, done = [];
     var BCELL = /<c r="B(\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/;
+    // 1.0.7 — a recoloured sub-heading ("shade"): capitals in B and nothing in C to G; anything else coloured is an item
+    function shadeKind(seg, t){
+      if(!t || t !== t.toUpperCase() || !/[A-Z]/.test(t)) return "plain";
+      var re = /<c r="([C-G])\d+"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g, mm;
+      while((mm = re.exec(seg))){ if(String(cellText(mm[2], mm[3]) == null ? "" : cellText(mm[2], mm[3])).trim() !== "") return "plain"; }
+      return "shade";
+    }
     function rowB(r){ var w = findRow(os, r); if(!w) return null; var seg = os.slice(w.a, w.b), m = BCELL.exec(seg); if(!m) return { w:w, seg:seg, text:"", kind:"plain" };
-      var s = /\bs="(\d+)"/.exec(m[2]); return { w:w, seg:seg, m:m, text:ownCopy(String(cellText(m[2], m[3])).trim()), kind: s ? (kinds[+s[1]]||"plain") : "plain" }; }
+      var s = /\bs="(\d+)"/.exec(m[2]), tx = ownCopy(String(cellText(m[2], m[3])).trim()), kd = s ? (kinds[+s[1]]||"plain") : "plain";
+      if(kd === "shade") kd = shadeKind(seg, tx);
+      return { w:w, seg:seg, m:m, text:tx, kind: kd }; }
     function ownCopy(t){ return t.length > 4096 ? t : t.split("").join(""); } // 6.2.8 — a name kept for later must not hold the whole sheet in memory
     var wantRebuild = false, rowsChanged = false, renamedRows = {};
     var BRP = sheets["Batch_Recipe"], br = null, d = await text(DP);
@@ -20984,7 +21049,7 @@ function healthWorkerMain(){
           rowsChanged = true; return;
         }
         if(op.kind === "caps"){
-          if(!(rb.kind === "yellow" || rb.kind === "blue") || !rb.m) throw new Error("Row " + r + " isn't a heading any more");
+          if(!(rb.kind === "yellow" || rb.kind === "blue" || rb.kind === "shade") || !rb.m) throw new Error("Row " + r + " isn't a heading any more"); // 1.0.7 shade: a recoloured sub-heading
           if(rb.text === rb.text.toUpperCase()) return;
           var a2 = rb.m[2].replace(/\s+t="[^"]*"/g, "") + ' t="inlineStr"';
           var nc = '<c r="B' + r + '"' + a2 + '><is><t xml:space="preserve">' + escX(rb.text.toUpperCase()) + '</t></is></c>';
@@ -21003,6 +21068,28 @@ function healthWorkerMain(){
           });
           os = os.slice(0, rb.w.a) + seg2 + os.slice(rb.w.b);
           done.push("row " + r + " cleared (" + rb.text + ")");
+          rowsChanged = true;
+        } else if(op.kind === "clearHeads"){ // 1.0.7 — a repeated sub-heading with nothing under it, back to a blank spare row
+          var expectH = op.names && op.names[r];
+          if(expectH == null || nk(rb.text) !== nk(expectH)) throw new Error("Row " + r + " now holds \u201c" + rb.text + "\u201d, not \u201c" + expectH + "\u201d");
+          if(rb.kind !== "blue" && rb.kind !== "shade") throw new Error("Row " + r + " isn't a sub-heading any more");
+          var sawG = false;
+          var seg5 = rb.seg.replace(/<c r="([A-Z]+)(\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g, function(all, col, rr, attrs, inner){
+            if(!INPUT[col]) return all; // columns P onwards (the row's own formulas) stay as they are
+            if(inner && /<f[ >]/.test(inner)) throw new Error("Row " + r + " has a formula in column " + col + "; not clearing it");
+            if(col !== "B"){ var cv = cellText(attrs, inner); if(String(cv == null ? "" : cv).trim() !== "") throw new Error("Row " + r + " has something in column " + col + "; not clearing it"); }
+            var a5 = attrs.replace(/\s+t="[^"]*"/g, "");
+            if(col === "B") return '<c r="B' + rr + '"/>'; // plain again: a blank spare row
+            if(col === "G"){ sawG = true; return '<c r="G' + rr + '"' + a5 + '><v>1E-06</v></c>'; }
+            return '<c r="' + col + rr + '"' + a5 + '/>';
+          });
+          if(!sawG){ // the spare row's placeholder price goes in column G, in column order
+            var gCell = '<c r="G' + r + '"><v>1E-06</v></c>', later = /<c r="([A-Z]+)\d+"/g, lm, at5 = -1;
+            while((lm = later.exec(seg5))){ var cn = lm[1]; if(cn.length > 1 || cn > "G"){ at5 = lm.index; break; } }
+            seg5 = at5 >= 0 ? seg5.slice(0, at5) + gCell + seg5.slice(at5) : seg5.replace(/<\/row>$/, gCell + "</row>"); // a heading row always has its B cell, so it has a closing tag
+          }
+          os = os.slice(0, rb.w.a) + seg5 + os.slice(rb.w.b);
+          done.push("row " + r + " repeated sub-heading cleared (" + rb.text + ")");
           rowsChanged = true;
         } else if(op.kind === "setCell"){
           if(!/^[CDG]$/.test(op.col)) throw new Error("That column can't be changed here");
@@ -21037,6 +21124,7 @@ function healthWorkerMain(){
       var sd0 = os.indexOf("<sheetData>"), sd1 = os.indexOf("</sheetData>"), sdx = os.slice(sd0, sd1);
       while((m = rowRe.exec(sdx))){ var bm = BCELL.exec(m[2] || ""), txt = "", kd = "plain";
         if(bm){ txt = String(cellText(bm[2], bm[3])).trim(); var s2 = /\bs="(\d+)"/.exec(bm[2]); kd = s2 ? (kinds[+s2[1]]||"plain") : "plain"; }
+        if(kd === "shade") kd = shadeKind(m[2] || "", txt) === "shade" ? "blue" : "plain"; // 1.0.7 — a recoloured sub-heading counts for the lists
         rows.push({ r:+m[1], t:txt, k:kd }); }
       sdx = null;
       var byR = {}; rows.forEach(function(x){ byR[x.r] = x; });
@@ -21380,17 +21468,18 @@ function healthWaitForSyncIdle(){
 }
 function healthFixSig(f){ return JSON.stringify({ ops: f.ops || null, fp: f.fp || null, app: f.app || null, local: f.local || null }); }
 function healthCombineOps(fixes){
-  var ops = [], caps = null, clear = null, lists = false, cells = [], blockOp = null;
+  var ops = [], caps = null, clear = null, heads = null, lists = false, cells = [], blockOp = null;
   fixes.forEach(function(f){ f.ops.forEach(function(o){
     if(o.kind === "setCell" || o.kind === "addMaster" || o.kind === "removeName" || o.kind === "restoreFormula" || o.kind === "renameHeading"){ cells.push(o); return; }
     if(o.kind === "clearBlock"){ blockOp = blockOp || { kind: "clearBlock", blocks: [], tpl: o.tpl }; if(!blockOp.blocks.some(function(x){ return x.r === o.rows[0]; })) blockOp.blocks.push({ r: o.rows[0], end: o.end, expect: o.expect }); return; } // 6.2.4 // these pass through as they are
     if(o.kind === "caps"){ caps = caps || { kind: "caps", rows: [] }; o.rows.forEach(function(r){ if(caps.rows.indexOf(r) < 0) caps.rows.push(r); }); }
     else if(o.kind === "clearRows"){ clear = clear || { kind: "clearRows", rows: [], names: {} }; o.rows.forEach(function(r){ if(clear.rows.indexOf(r) < 0){ clear.rows.push(r); clear.names[r] = o.names && o.names[r]; } }); }
+    else if(o.kind === "clearHeads"){ heads = heads || { kind: "clearHeads", rows: [], names: {} }; o.rows.forEach(function(r){ if(heads.rows.indexOf(r) < 0){ heads.rows.push(r); heads.names[r] = o.names && o.names[r]; } }); } // 1.0.7
     else if(o.kind === "rebuildLists") lists = true;
   }); });
-  if(caps) ops.push(caps); if(clear) ops.push(clear); ops = ops.concat(cells); if(blockOp) ops.push(blockOp); if(lists) ops.push({ kind: "rebuildLists" });
+  if(caps) ops.push(caps); if(clear) ops.push(clear); if(heads) ops.push(heads); ops = ops.concat(cells); if(blockOp) ops.push(blockOp); if(lists) ops.push({ kind: "rebuildLists" });
   // anything this doesn't recognise is a mistake: refuse rather than silently drop it
-  var known = { caps:1, clearRows:1, setCell:1, rebuildLists:1, addMaster:1, removeName:1, restoreFormula:1, renameHeading:1, clearBlock:1 }; // 6.2.4
+  var known = { caps:1, clearRows:1, clearHeads:1, setCell:1, rebuildLists:1, addMaster:1, removeName:1, restoreFormula:1, renameHeading:1, clearBlock:1 }; // 6.2.4; 1.0.7 clearHeads
   fixes.forEach(function(f){ f.ops.forEach(function(o){ if(!known[o.kind]) throw new Error("Unknown fix type " + o.kind); }); });
   return ops;
 }
@@ -21471,7 +21560,7 @@ function healthRunAppFix(target){
         if(!item.categoryMovePending) item.categoryMoveFrom = "";
         item.categoryMovePending = true; delete item.categoryMoveFailed;
         after.send = true;
-        return { kind: "move", text: "Done: " + item.name + " keeps " + item.category + ", and its ledger row moves under it on the save that's starting now." };
+        return { kind: "move", text: "Saving: " + item.name + " keeps " + item.category + ", and its ledger row moves under it on the save that's starting now. The check runs again after it and lists anything that couldn't move." };
       }
       var to = a.to;
       if(a.field === "unitType"){
@@ -21706,7 +21795,7 @@ var healthSavedItems = null; // item id -> how it looked at the last good save
 var healthOpenRows = {};     // which "Show items" lists are open
 function healthItemSig(it){ return JSON.stringify([it.supplier || "", it.name || "", it.category || "", it.price == null ? null : it.price, it.productCode || "", it.unitType || ""]); }
 function healthItemSigs(){ var m = {}; state.items.forEach(function(it){ m[it.id] = healthItemSig(it); }); return m; }
-var HEALTH_KINDS = ["emptyblock","app-only","ledger-only","caps-sup","caps-cat","move-failed","batch-missing","batch-stale","file","price","code","cat","pricedby","deleted","dup","dupcode","badname","master","ref","noname","cascade","nodv","notin","br","lookup","ing","ingled"];
+var HEALTH_KINDS = ["dupheads","emptyblock","app-only","ledger-only","caps-sup","caps-cat","move-failed","batch-missing","batch-stale","file","price","code","cat","pricedby","deleted","dup","dupcode","badname","master","ref","noname","cascade","nodv","notin","br","lookup","ing","ingled"];
 function healthKind(i){ for(var k = 0; k < HEALTH_KINDS.length; k++){ var p = HEALTH_KINDS[k]; if(i.id === p || i.id.indexOf(p + "-") === 0) return p; } return i.id.split("-")[0]; }
 function healthIssueItem(i){
   var id = null;
@@ -21750,6 +21839,7 @@ var HEALTH_ROW_TEXT = {
   "move-failed": ["item couldn't be moved to its sub-heading in the ledger", "items couldn't be moved to their sub-heading in the ledger"],
   cascade: ["item can't be picked on Batch Recipe", "items can't be picked on Batch Recipe"],
   "batch-missing": ["batch recipe isn't on the Order Sheet", "batch recipes aren't on the Order Sheet"],
+  dupheads: ["supplier block has repeated sub-headings with nothing under them", "supplier blocks have repeated sub-headings with nothing under them"], // 1.0.7
   emptyblock: ["supplier heading in the ledger has no items and isn't in the app", "supplier headings in the ledger have no items and aren't in the app"], // 6.2.4
   badname: ["supplier heading can't be used as a drop-down list name", "supplier headings can't be used as drop-down list names"] // 6.2.4 — one line, not one each
 };
@@ -21759,7 +21849,7 @@ var HEALTH_SECTIONS = [
   { name: "Missing items", kinds: ["app-only","ledger-only","deleted","dup","dupcode"] },
   { name: "Recipes", kinds: ["br","lookup","ing","ingled","batch-missing","batch-stale"] },
   { name: "Other differences", kinds: ["cat","code","pricedby","move-failed"] },
-  { name: "Drop-downs and headings", kinds: ["emptyblock","badname","master","ref","noname","cascade","nodv","notin","caps-sup","caps-cat"] }
+  { name: "Drop-downs and headings", kinds: ["dupheads","emptyblock","badname","master","ref","noname","cascade","nodv","notin","caps-sup","caps-cat"] }
 ];
 function healthSectionOf(row){
   for(var s = 0; s < HEALTH_SECTIONS.length; s++) if(HEALTH_SECTIONS[s].kinds.indexOf(row.kind) >= 0) return s;

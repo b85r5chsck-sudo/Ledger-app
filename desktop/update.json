@@ -1,0 +1,8 @@
+{
+  "version": "1.0.7",
+  "minApp": "1.0.6",
+  "sha256": "58354022178c57cd235162b72956c17ac2767830566a2e339752c50ea257f7d2",
+  "notes": "Fixed: the ledger check now reads sub-headings that were recoloured in Excel (for example grey instead of blue), so items no longer show as being under a different sub-heading. “Keep the app’s sub-heading” no longer adds rows to the ledger when it can’t read a sub-heading, and says plainly if an item couldn’t be moved. New in the ledger check: repeated sub-headings with nothing under them can be tidied back to blank spare rows (a copy of the ledger is saved first).",
+  "sig": "5oSBlEDeDeMwemo+emnuxG/qc4QGOVboUjmH/VjB+1G+tSHoiJgVJt0ZUwYbefveLgdWzFrgL67SGC1ixj8oAA==",
+  "page": "index-1.0.7.html"
+}
