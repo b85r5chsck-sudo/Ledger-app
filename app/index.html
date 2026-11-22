@@ -4150,7 +4150,7 @@ async function buildStandaloneRecipeXlsxBuffer(sheetName, fields){
    time that field changes — that's the only place this needs
    updating; both About surfaces pick it up automatically.
    ============================================================ */
-var APP_VERSION = "1.0.5";
+var APP_VERSION = "1.0.6";
 // Shown after the version (e.g. " TRIAL" on trial builds); empty on the real app.
 var APP_VERSION_TAG = "";
 // Build number, per the user: six characters, digit-letter-digit-digit-
@@ -4160,6 +4160,7 @@ var APP_VERSION_TAG = "";
 // starts again at A1 (5.7.9 -> 5G09A1, 5.8.0 -> 5H00A1).
 var APP_BUILD = ""; // from V6.0.1, per the user: no build numbers, each new build is the next patch version
 var CHANGELOG = [ // 1.0.0 — per Simon: the history starts again here, newest first
+  { version: "1.0.6", note: "New: Updates without a new installer. When a newer version is ready, a box at the top right says so: press Update now and the app saves, then restarts on it. Every update is checked before it is used, and Help \u203a Go back to the built-in version undoes one. New: Online copy. Sign in with \u2601 Online copy (next to the status at the top) and this computer shares its items, suppliers, recipes and saved orders with the iPads, iPhones and web app, about every 30 seconds. The ledger on the network drive works as before. A full backup (.json) now brings in suppliers\u2019 details (address, email, phone, account number, ordering method and notes) and saved orders too, not just items and recipes. Links in the app only ever open web pages, email or phone numbers." },
   { version: "1.0.5", note: "New: Your files. When the ledger, Master Order File or Menu Backup isn\u2019t linked, or can\u2019t be found, the app says so when it opens and helps put it right: it makes the file next to the ledger and links it, or helps you find it, or shows how to make it yourself. The Menu Backup can wait (Not now asks again in a week). Where files are has a Set up button for the same thing. A new business can keep its files on just this computer, in Documents. Recipe search: the drop-down now lists every match, not just the first 8, and the arrow keys go through them all. One Import button: pick any file and the app works out what it is (a backup, a ledger, a price list, a supplier\u2019s own file, suppliers, order history or Menu Backup recipes). It only asks when it can\u2019t be sure, and then only between the two likeliest kinds. Supplier file layouts a business starts with now come from its own settings, not the app." },
   { version: "1.0.4", note: "New: Menu Item Recipes have their own code too, M0010 upwards, kept the same way as a Batch Recipe\u2019s C-code; search finds a recipe by it. The app now names its files after the business: the ledger, Master Order File and Menu Backup are copied once to their new names next to the old ones and used from then on, and other computers follow by themselves. A new business is set up from the app: it makes the three files in one folder on the network drive." },
   { version: "1.0.3", note: "New: a search box on Batch Recipe and Menu Item Recipe. Type part of a recipe\u2019s name or its code and the list fills in as you type: use the arrow keys and Enter, or click, to open one. On Menu Item Recipe a code finds every dish that uses that item. Where files are has moved into Settings. Settings \u203a General: Top suppliers now takes up to seven." },
@@ -5620,7 +5621,7 @@ var TOAST_MIN_MS = 10000, TOAST_MAX_SHOWN = 4;
 // codes) and written to the error log.
 var MESSAGE_CODE_RE = /^[ABC]\d{3}$/, MESSAGE_CODE_KEY = "chequers-message-codes-v1";
 // 6.3.1 — what each code's message says (the same list as the Complete Guide's message codes page; … where a name or number goes)
-var MESSAGE_CODE_TEXT = {"A113": "Importing \u2026 as: \u2026.", "B274": "\u2026 holds recipe or order tabs, which the app reads from .xlsx files only. Open it in Excel, save it as .xlsx, then import that.", "B273": "\u2026 isn\u2019t a file the app can import. It takes backups (.json) and spreadsheets (.xlsx, .xlsm, .xls, .csv).", "C498": "Couldn\u2019t read \u2026.", "A110": "Made and linked \u2026 in \u2026.", "A111": "Linked \u2026.", "A112": "\u2026 was already in that folder, so the app linked it.", "B270": "\u2026 can\u2019t be found at \u2026. Check this computer is connected to the network drive, then press Check again; if the file was moved, press Find it.", "B271": "That isn\u2019t \u2026: it\u2019s called \u2026. Pick the file called \u2026, or press Find it again.", "C496": "The app couldn\u2019t make \u2026 in \u2026 (\u2026). The steps below show how to make it yourself.", "C497": "Couldn\u2019t link \u2026 (\u2026). Try Find it again.", "B272": "This computer already has items, recipes, suppliers or orders, so the app won\u2019t start a new ledger here. \u2026", "A001": "Undone.", "A002": "Redone.", "A003": "\u201c\u2026\u201d is on the Order Sheet under \u2026 at \u2026. Its price there now follows the batch cost.", "A004": "An item moved to another sub-heading. The ledger row follows on the next save.", "A005": "Order copied \u2014 paste it into your email.", "A006": "Deleted that saved order.", "A007": "Reordered the items from an old order (any that couldn't be matched are named).", "A008": "Checking \u2026 for order history.", "A009": "Orders imported.", "A010": "Deleted \"\u2026\".", "A011": "Added \"\u2026\".", "A012": "Deleted \"\u2026\".", "A013": "Import cancelled \u2014 nothing was changed.", "A014": "Suppliers added and updated.", "A015": "Suppliers added and merged.", "A016": "Items restored from a backup.", "A017": "Link added.", "A018": "Exported \"\u2026\" to Documents/recipes.", "A019": "Exported \"\u2026\".", "A020": "Exported \"\u2026\".", "A021": "Exported \"\u2026\" to your Backups folder (Documents/Backups/Excel).", "A022": "Exported chequers-kitchen-ledger.xlsx.", "A023": "Exported \"\u2026\" to your Backups folder (Documents/Backups/Excel).", "A024": "Saved \"\u2026\" in your Backups folder (Documents/Backups/JSON).", "A025": "Today's automatic backup is done \u2014 the last 30 days' worth has also been zipped into \u2026.", "A026": "Today's automatic backup is done.", "A027": "Linked in the browser \u2014 this link lasts while this tab stays open; reopening the file later just needs one more click on \"Link Excel file\u2026 \".", "A028": "Updated from \u2026 (it changed on disk).", "A029": "Linked to a macro-enabled workbook \u2014 your macros, buttons and comments stay untouched; only the Order Sheet / recipe tabs are kept in sync.", "A030": "Linked to \"\u2026\" \u2014 changes will sync both ways from now on.", "A031": "Checking \u2026 for new or changed recipes.", "A032": "Checking the ledger for changes from other computers.", "A033": "Ledger checked: nothing new from other computers.", "A034": "Caught up with changes another computer saved to the ledger.", "A035": "Caught up with this ledger (or read it for the first time). A backup was made first.", "A036": "Syncing with the linked file.", "A037": "Synced with the ledger.", "A038": "Unlinked \u2014 this file will no longer sync automatically.", "A039": "Syncing with the linked file.", "A040": "Synced with the ledger.", "A041": "Linked master Orders file \"\u2026\" \u2014 anything already in its Suppliers tab is pulled in now, and it stays in sync both ways: edit it there or in the app, and \"Sync now\" (or the next order) catches up the other side.", "A042": "Syncing with the master Orders file.", "A043": "Synced with \u2026 the master Orders file.", "A044": "Syncing with the master Orders file.", "A045": "Synced with \u2026 the master Orders file.", "A046": "Unlinked \u2014 the master Orders file will no longer update automatically.", "A047": "Backed up to the Menu Backup file (\u2026 automatic backups so far).", "A048": "No new recipes in \u2026 \u2014 this copy is already up to date.", "A049": "Checking \u2026 for new recipes.", "A050": "Checking \u2026 for new recipes.", "A051": "Linked Menu Backup file \"\u2026\" \u2014 every recipe backs up here automatically now. Use \"Update\" any time to pull in recipes this copy doesn't have yet.", "A052": "Backing up to the Menu Backup file.", "A053": "Backed up to \u2026 the Menu Backup file.", "A054": "Backing up to the Menu Backup file.", "A055": "Backed up to \u2026 the Menu Backup file.", "A056": "Unlinked \u2014 recipes will no longer back up automatically.", "A057": "Syncing \"\u2026\" to the master Orders file.", "A058": "Synced \"\u2026\" to \u2026 the master Orders file.", "A059": "Merged \"\u2026\" into \"\u2026\": \u2026 updated, \u2026 moved.", "A060": "Deleted supplier \"\u2026\".", "A061": "Setting up \u2026 in the ledger\u2026 (the app stays usable).", "A062": "Exported \"\u2026\".", "A063": "Saved \"\u2026\" to Documents/orders.", "A064": "Items will be added to the ledger on this save (or are already waiting to be added).", "A065": "Cleared the ticks, QTYs and Price varies for a supplier. The order is still saved in the history.", "A066": "Cleared the ticks, QTYs and Price varies for a supplier. The order is still saved in the history.", "A067": "Emailed the order.", "A068": "Biomatrix Lock turned on, or its password changed.", "A069": "Biomatrix Lock turned off \u2014 all tabs are always open again.", "A070": "Unlocked for a set time.", "A071": "Biomatrix Lock \u2014 locked again.", "A072": "Top supplier set or cleared.", "A073": "Top 5 cleared \u2014 every supplier is A\u2013Z.", "A074": "Daily backups will now be saved to \"\u2026\".", "A075": "Daily backups will use the default Backups folder again.", "A076": "Email settings saved.", "A077": "Sending test email.", "A078": "Test email sent.", "A079": "Backed up, unlinked, and reset \u2014 every linked file is untouched. Link them again to resume syncing.", "A080": "Saving a full backup before resetting.", "A081": "Ledger drop-downs set up for \u2026, \u2026 (a backup was saved first).", "A082": "Tidied up suppliers.", "A083": "Tidied up the Order Sheet.", "A084": "Tidied up Order Sheet suppliers.", "A085": "Merged one supplier into another.", "A086": "Removed a \"Batch Recipe\" entry that was never a real recipe \u2014 it was the spreadsheet's own blank template tab, getting reimported by mistake (now fixed).", "A087": "Fixed the spelling of CHEQUERS KITCHEN (was KIITCHEN) in \u2026 place.", "A088": "Added a link to the Help Files under Training Guide Links.", "A089": "A price was changed both on this computer and in the ledger. The newest change was kept. Click \u201cN differences\u201d at the top to check.", "A090": "Tidied the CHEQUERS KITCHEN items: \u2026 doubled items removed, \u2026 moved from an old spelling, \u2026 extra supplier record merged. Recipes now point at the item kept. A copy of the app data from before is in Documents \u203a Backups \u203a JSON.", "A091": "\u2026 suppliers removed from the app. Their empty headings in the ledger are cleared next, with a backup copy saved first.", "A092": "\u2026 empty supplier headings cleared from the ledger (a backup was saved first).", "A093": "Every supplier has at least one item, so there\u2019s nothing to remove.", "A094": "Slower computer: on. Saving to the ledger at most every 2 minutes while you work. / Slower computer: off. Saving 30 seconds after your last change.", "A095": "Moving to the ledger under its new name, made by another computer\u2026", "A096": "Making the ledger under its new name (without macros)\u2026", "A097": "The ledger is now the copy under its new name (with no macros). The old one is kept as it was.", "A098": "This ledger has moved to its new name. Switching to it.", "A099": "The Master Order File or Menu Backup file is now the copy under its new name. The old one is kept as it was.", "A100": "Made and linked the ledger, Master Order File and Menu Backup for a new client. Every other computer picks the same folder.", "A101": "Linked the ledger, Master Order File and Menu Backup another computer set up.", "B200": "You're ordering ZERO quantity of \"\u2026\" \u2014 are you sure?", "B201": "There is more than one \u201c\u2026\u201d under \u2026 on the Order Sheet. Delete the spare one first, then press Complete again.", "B202": "\u201c\u2026\u201d is already kept up to date by the batch recipe \u201c\u2026\u201d.", "B203": "\u201c\u2026\u201d uses its own Order Sheet item (directly or through another batch). Remove that ingredient first.", "B204": "That item isn't on the Order Sheet any more, so nothing was moved.", "B205": "That sub-heading isn't one of this supplier's any more, so nothing was moved.", "B206": "Same as the last order already saved for \u2026 \u2014 not logged again. Tick/untick something (or use Clear ticks first) to record a genuinely new order.", "B207": "No order-history tabs found in \u2026 \u2014 this app writes one per supplier, titled \u201cOrder history \u2014 <supplier>\u201d. Pick your Orders.xlsx (the master Orders file, not the Order Sheet workbook) instead if that's not what you chose.", "B208": "Nothing new to import \u2014 every ticked order was already saved here.", "B209": "That product code is already used by another item.", "B210": "\u201c\u2026\u201d is now flagged as price-varies \u2014 its price on screen stays as typed, but any order sent to the supplier will say \u201cPrice to be determined\u201d for it instead, and it won't be counted in that order's total.", "B211": "Give the item a name first.", "B212": "Changed on this computer and on another one since they last agreed, so this computer's version was kept:.", "B213": "Still reading \u2026 \u2014 give it a moment, then try Import again.", "B214": "A full backup is a .json file \u2014 that's a.\u2026 file. Pick Import again and choose the right kind.", "B215": "That's a backup (.json) file \u2014 pick Import again and choose Full backup.", "B216": "Choose an Excel .xlsx file or a CSV. Save older .xls files as .xlsx first.", "B217": "No worksheets found in that file.", "B218": "Another import started since this file was opened \u2014 pick Import again.", "B219": "No supplier names found in that file.", "B220": "Pick a supplier from the list first.", "B221": "Pick a supplier from the list first.", "B222": "Nothing ticked \u2014 nothing restored.", "B223": "Only web links can be opened here \u2014 use Manage Training Guide Links\u2026 to fix it.", "B224": "Add a link first \u2014 paste a web address or pick a local PDF.", "B225": "Only web links (http/https) can be added here \u2014 a browser tab can't keep a local file path.", "B226": "Items in the app have no matching row in the ledger and won't sync. Click \u201cN not in ledger\u201d at the top for the list.", "B227": "Updated from \u2026 \u2014 \u2026 supplier name(s) on the Order Sheet don't match an existing supplier:.", "B228": "Linked to \"\u2026\" \u2014 \u2026 supplier name(s) on the Order Sheet don't match an existing supplier:.", "B229": "Link a file at the top of the page first.", "B230": "Couldn't read the ledger yet (is your network drive connected, or is it open elsewhere?). Nothing is saved to it until it can be read. Trying again in 30 seconds.", "B231": "This ledger has no room for the save stamp (DATA tab, rows 3 to 7 under Home, must be empty), so other computers can't tell it has changed. Saving still works.", "B232": "Link a file at the top of the page first.", "B233": "Linked master Orders file \"\u2026\" \u2014 its Suppliers tab has supplier(s) this app doesn't have yet. Review them now before anything syncs, so nothing in the file gets overwritten.", "B234": "Checked the file for recipes: what was added, and any recipe that differs from the file (flagged on its card).", "B235": "Link a Menu Backup file first.", "B236": "Nothing in \u2026 yet \u2014 back up at least one recipe first.", "B237": "Link a master Orders file first (Suppliers tab toolbar).", "B238": "Tick at least one supplier.", "B239": "Items with zero quantity are highlighted on the Order Sheet.", "B240": "Assign a supplier to every checked item first.", "B241": "Assign a supplier to every checked item first.", "B242": "Assign a supplier to every checked item first.", "B243": "This supplier isn't set to order by email.", "B244": "Emailing suppliers is available in the desktop app, once email is set up in Settings.", "B245": "Your email app is taking a while, or the order may not have been attached. Check the email before sending.", "B246": "Switch to \"Send directly\" above to test the SMTP account.", "B247": "Enter an email address first.", "B248": "The ledger is open in Excel, so the drop-downs for \u2026, \u2026 will be set up once it's closed.", "B249": "Menu Item Recipe may have duplicates from a past sync glitch (now fixed) \u2014 worth checking:.", "B250": "Cleared \u2026 recipe ingredient quantity(ies) corrupted by a past sync glitch (now fixed) \u2014 please re-enter:.", "B251": "Removed \u2026 old leftover Order Sheet item(s) from a past import bug (now fixed) \u2014 the correct, up-to-date item was already filed properly: \u2026 (\u2026).", "B252": "Moved \u2026 item(s) off \"Unassigned\" \u2014 they were already filed correctly under their real supplier from a past import bug (now fixed).", "B253": "Removed \u2026 old leftover \"SUFFOLK_FARM.\" item(s) from the TRAYMOORE mix-up fixed back in 4.4.6 \u2014 the correct TRAYMOORE item was already filed properly.", "B254": "The ledger is open in Excel, so the empty supplier headings will be cleared once it\u2019s closed.", "B255": "The window stopped and was restarted. Your changes are kept and will be saved to the ledger.", "B257": "The ledger isn\u2019t in that folder. Pick the folder the first computer set up.", "B258": "Linked the ledger another computer set up; the Master Order File or Menu Backup wasn\u2019t in that folder, so it isn\u2019t linked yet.", "B256": "A file with the new name is already next to the Master Order File or Menu Backup file and isn't a copy of it, so this computer keeps using the old one.", "C400": "This computer can't save to the ledger right now (it is read-only, or not caught up with another computer yet).", "C401": "The ledger was saved by a newer version of the app on another computer. Update this computer before making changes.", "C402": "Can't complete \u201c\u2026\u201d yet: \u2026; \u2026.", "C403": "Can't complete \u201c\u2026\u201d yet: \u2026, \u2026 (a batch it uses) isn't up to date. Fix that batch first.", "C404": "Couldn't copy automatically \u2014 select the text in the box and copy it manually.", "C405": "Couldn't reorder \u2014 none of this order's items match anything currently on the Order Sheet for \u2026 (renamed, deleted, or moved supplier since).", "C406": "Couldn't read \u2026 \u2014 check it's an Orders file (or another file this app wrote order-history tabs into) and try again.", "C407": "Couldn't read that file.", "C408": "Can't move it there.", "C409": "Couldn't read that file.", "C410": "That JSON file doesn't look like a ledger backup.", "C411": "Couldn't parse that JSON file.", "C412": "Couldn't read that workbook.", "C413": "Couldn't read that file.", "C414": "Couldn't read that file.", "C415": "Couldn't import those rows.", "C416": "Couldn't read that file.", "C417": "Couldn't read that file.", "C418": "Restoring from backup isn't available in this build.", "C419": "That file can't be found anymore \u2014 use Manage Training Guide Links\u2026 to fix it.", "C420": "Couldn't open that link.", "C421": "Couldn't open that link.", "C422": "Couldn't open the file picker.", "C423": "Couldn't export this recipe \u2014 the reason is in the message.", "C424": "Export library failed to load \u2014 check your connection and try again.", "C425": "Couldn't export this recipe \u2014 the reason is in the message.", "C426": "Couldn't save to Documents/recipes (\u2026 unknown error\u2026) \u2014 saved as a normal download instead.", "C427": "Couldn't save to your Backups folder \u2014 downloaded a copy instead.", "C428": "Excel library failed to load \u2014 check your connection and try again.", "C429": "Couldn't save to your Backups folder \u2014 downloaded a copy instead.", "C430": "This app build can't save to your Backups folder yet \u2014 downloaded \"\u2026\" instead.", "C431": "Couldn't read the linked file to match its layout \u2014 exported a fresh copy instead.", "C432": "Couldn't save to your Backups folder \u2014 downloaded a copy instead.", "C433": "Couldn't save to your Backups folder \u2014 downloaded a copy instead.", "C434": "Today's automatic backup didn't run\u2026: \u2026 \u2014 \"Back up now\" still works as usual.", "C435": "Couldn't find your backup drive (the folder you picked in Settings) \u2014 today's automatic backup was saved to the standard Backups folder instead.", "C436": "Today's automatic backup didn't run \u2014 \"Back up now\" still works as usual.", "C437": "Couldn't save to the linked file \u2014 close it in Excel so the app can save to it.", "C438": "Couldn't save to the linked file \u2014 close it in Excel so the app can save to it.", "C439": "The ledger was saved by a newer version of the app on another computer. Update this computer; until then nothing is saved to the ledger.", "C440": "The ledger keeps changing on another computer, so this computer's changes weren't saved yet. They'll be saved on the next try.", "C441": "Couldn't add rows to Order_Sheet in the ledger. Those items weren't added this time; prices still sync. The app tries again on the next save.", "C442": "Couldn't sync to the linked file \u2014 app error.", "C443": "No room in a supplier's block: some items weren't added. Close the ledger in Excel; if it keeps happening, use Send files to support.", "C444": "The ledger keeps changing on another computer, so this computer's changes weren't saved yet. They'll be saved on the next try.", "C445": "Couldn't sync to the linked file \u2014 app error.", "C446": "The ledger was saved by a newer version of the app on another computer. Update this computer; until then nothing is saved to the ledger.", "C447": "Couldn't read the linked file \u2014 is it still there?", "C448": "Couldn't link that file: \u2026 unknown error.", "C449": "Couldn't read \u2026 \u2014 is it still there, or open elsewhere?", "C450": "The ledger was saved by a newer version of the app on another computer. Update this computer; until then nothing is saved to the ledger.", "C451": "Couldn't update the Master Order File. Close it in Excel (or check it isn't damaged) and try again. Nothing was changed.", "C452": "Couldn't update the Master Order File. Close it in Excel (or check it isn't damaged) and try again. Nothing was changed.", "C453": "Couldn't sync the master Orders file \u2014 its Suppliers tab has \u2026 supplier(s) this app doesn't have yet (\u2026, \u2026). Review them below \u2014 nothing was changed in the file so they're not lost.", "C454": "The Master Order File keeps changing on another computer, so it wasn't updated this time. Try Sync again in a moment.", "C455": "Couldn't update the master Orders file \u2014 it's in use or not allowed (\u2026). If it isn't open in Excel, check your network drive is connected and try Sync again.\u2026 \u2014 \u2026 unknown reason.", "C456": "Couldn't update the master Orders file \u2014 app error.", "C457": "Couldn't link that file: \u2026 unknown error.", "C458": "Couldn't update the Menu Backup file. Close it in Excel (or check it isn't damaged) and try again. Nothing was changed.", "C459": "Couldn't update the Menu Backup file. Close it in Excel (or check it isn't damaged) and try again. Nothing was changed.", "C460": "Couldn't update the Menu Backup file \u2014 close it in Excel so the app can save to it.", "C461": "Couldn't update the Menu Backup file \u2014 close it in Excel so the app can save to it.", "C462": "Couldn't read \u2026 \u2014 it may be open elsewhere. Nothing changed.", "C463": "Couldn't read \u2026 \u2014 it may be open elsewhere or in an unexpected format.", "C464": "Couldn't read that file.", "C465": "Couldn't read \u2026 \u2014 check it's your linked ledger spreadsheet, a Menu Backup file, or another file this app wrote recipe tabs into, and try again.", "C466": "Couldn't read that file.", "C467": "Couldn't link that file: \u2026 unknown error.", "C468": "The ledger is open in Excel. Close it there, then click Set up in Excel again.", "C469": "Couldn't check whether the ledger is open in Excel; nothing was changed.", "C470": "Couldn't create the stock count sheet.", "C471": "Couldn't save to Documents/orders (\u2026 unknown error\u2026) \u2014 downloading instead.", "C472": "Couldn't save to Documents/orders \u2014 downloading instead.", "C473": "Couldn't generate the document \u2014 the reason is in the message.", "C474": "Zip library failed to load.", "C475": "Couldn't generate documents \u2014 the reason is in the message.", "C476": "Couldn't open your email app \u2014 the reason is in the message.", "C477": "Couldn't send the email \u2014 the reason is in the message.", "C478": "Couldn't email the order \u2014 the reason is in the message.", "C479": "Couldn't set that folder.", "C480": "Couldn't save settings \u2014 the reason is in the message.", "C481": "Test email failed \u2014 the reason is in the message.", "C482": "Backup couldn't be saved \u2014 resetting anyway.", "C483": "The ledger stayed open in Excel, so the drop-downs for \u2026, \u2026 weren't set up. The shield shows what's needed.", "C484": "Couldn't set up the drop-downs for \u2026, \u2026 automatically. The shield shows what's needed.", "C485": "The ledger stayed open in Excel, so the empty supplier headings weren\u2019t cleared. The shield lists them, with Clear all.", "C487": "Couldn\u2019t make the ledger under its new name. You can carry on as before; the app will ask again next time.", "C488": "This ledger has moved, but the file it moved to isn\u2019t this ledger. Nothing is saved to the ledger until that\u2019s sorted out: link the right file in Settings, or use Send files to support.", "C490": "One of the new client\u2019s files is already in that folder, so nothing was made. If another computer set them up, use those.", "C492": "Couldn\u2019t make the ledger under its new name yet. Nothing is saved to the old ledger; the app tries again every minute.", "C491": "Couldn\u2019t set up the new client\u2019s files. Nothing is linked yet; try again, or link each file in Settings.", "C489": "Couldn\u2019t copy the Master Order File or Menu Backup file to its new name. The app carries on with the old file and tries again next time it opens.", "C486": "Couldn\u2019t clear the empty supplier headings from the ledger automatically (\u2026). The shield lists them, with Clear all."};
+var MESSAGE_CODE_TEXT = {"B290": "The Master Order File and this app had different supplier details, so the app\u2019s were kept: \u2026. Change them on the Suppliers tab if the file was right.", "A113": "Importing \u2026 as: \u2026.", "B274": "\u2026 holds recipe or order tabs, which the app reads from .xlsx files only. Open it in Excel, save it as .xlsx, then import that.", "B273": "\u2026 isn\u2019t a file the app can import. It takes backups (.json) and spreadsheets (.xlsx, .xlsm, .xls, .csv).", "C498": "Couldn\u2019t read \u2026.", "A110": "Made and linked \u2026 in \u2026.", "A111": "Linked \u2026.", "A112": "\u2026 was already in that folder, so the app linked it.", "B270": "\u2026 can\u2019t be found at \u2026. Check this computer is connected to the network drive, then press Check again; if the file was moved, press Find it.", "B271": "That isn\u2019t \u2026: it\u2019s called \u2026. Pick the file called \u2026, or press Find it again.", "C496": "The app couldn\u2019t make \u2026 in \u2026 (\u2026). The steps below show how to make it yourself.", "C497": "Couldn\u2019t link \u2026 (\u2026). Try Find it again.", "B272": "This computer already has items, recipes, suppliers or orders, so the app won\u2019t start a new ledger here. \u2026", "A001": "Undone.", "A002": "Redone.", "A003": "\u201c\u2026\u201d is on the Order Sheet under \u2026 at \u2026. Its price there now follows the batch cost.", "A004": "An item moved to another sub-heading. The ledger row follows on the next save.", "A005": "Order copied \u2014 paste it into your email.", "A006": "Deleted that saved order.", "A007": "Reordered the items from an old order (any that couldn't be matched are named).", "A008": "Checking \u2026 for order history.", "A009": "Orders imported.", "A010": "Deleted \"\u2026\".", "A011": "Added \"\u2026\".", "A012": "Deleted \"\u2026\".", "A013": "Import cancelled \u2014 nothing was changed.", "A014": "Suppliers added and updated.", "A015": "Suppliers added and merged.", "A016": "Items restored from a backup.", "A017": "Link added.", "A018": "Exported \"\u2026\" to Documents/recipes.", "A019": "Exported \"\u2026\".", "A020": "Exported \"\u2026\".", "A021": "Exported \"\u2026\" to your Backups folder (Documents/Backups/Excel).", "A022": "Exported chequers-kitchen-ledger.xlsx.", "A023": "Exported \"\u2026\" to your Backups folder (Documents/Backups/Excel).", "A024": "Saved \"\u2026\" in your Backups folder (Documents/Backups/JSON).", "A025": "Today's automatic backup is done \u2014 the last 30 days' worth has also been zipped into \u2026.", "A026": "Today's automatic backup is done.", "A027": "Linked in the browser \u2014 this link lasts while this tab stays open; reopening the file later just needs one more click on \"Link Excel file\u2026 \".", "A028": "Updated from \u2026 (it changed on disk).", "A029": "Linked to a macro-enabled workbook \u2014 your macros, buttons and comments stay untouched; only the Order Sheet / recipe tabs are kept in sync.", "A030": "Linked to \"\u2026\" \u2014 changes will sync both ways from now on.", "A031": "Checking \u2026 for new or changed recipes.", "A032": "Checking the ledger for changes from other computers.", "A033": "Ledger checked: nothing new from other computers.", "A034": "Caught up with changes another computer saved to the ledger.", "A035": "Caught up with this ledger (or read it for the first time). A backup was made first.", "A036": "Syncing with the linked file.", "A037": "Synced with the ledger.", "A038": "Unlinked \u2014 this file will no longer sync automatically.", "A039": "Syncing with the linked file.", "A040": "Synced with the ledger.", "A041": "Linked master Orders file \"\u2026\" \u2014 anything already in its Suppliers tab is pulled in now, and it stays in sync both ways: edit it there or in the app, and \"Sync now\" (or the next order) catches up the other side.", "A042": "Syncing with the master Orders file.", "A043": "Synced with \u2026 the master Orders file.", "A044": "Syncing with the master Orders file.", "A045": "Synced with \u2026 the master Orders file.", "A046": "Unlinked \u2014 the master Orders file will no longer update automatically.", "A047": "Backed up to the Menu Backup file (\u2026 automatic backups so far).", "A048": "No new recipes in \u2026 \u2014 this copy is already up to date.", "A049": "Checking \u2026 for new recipes.", "A050": "Checking \u2026 for new recipes.", "A051": "Linked Menu Backup file \"\u2026\" \u2014 every recipe backs up here automatically now. Use \"Update\" any time to pull in recipes this copy doesn't have yet.", "A052": "Backing up to the Menu Backup file.", "A053": "Backed up to \u2026 the Menu Backup file.", "A054": "Backing up to the Menu Backup file.", "A055": "Backed up to \u2026 the Menu Backup file.", "A056": "Unlinked \u2014 recipes will no longer back up automatically.", "A057": "Syncing \"\u2026\" to the master Orders file.", "A058": "Synced \"\u2026\" to \u2026 the master Orders file.", "A059": "Merged \"\u2026\" into \"\u2026\": \u2026 updated, \u2026 moved.", "A060": "Deleted supplier \"\u2026\".", "A061": "Setting up \u2026 in the ledger\u2026 (the app stays usable).", "A062": "Exported \"\u2026\".", "A063": "Saved \"\u2026\" to Documents/orders.", "A064": "Items will be added to the ledger on this save (or are already waiting to be added).", "A065": "Cleared the ticks, QTYs and Price varies for a supplier. The order is still saved in the history.", "A066": "Cleared the ticks, QTYs and Price varies for a supplier. The order is still saved in the history.", "A067": "Emailed the order.", "A068": "Biomatrix Lock turned on, or its password changed.", "A069": "Biomatrix Lock turned off \u2014 all tabs are always open again.", "A070": "Unlocked for a set time.", "A071": "Biomatrix Lock \u2014 locked again.", "A072": "Top supplier set or cleared.", "A073": "Top 5 cleared \u2014 every supplier is A\u2013Z.", "A074": "Daily backups will now be saved to \"\u2026\".", "A075": "Daily backups will use the default Backups folder again.", "A076": "Email settings saved.", "A077": "Sending test email.", "A078": "Test email sent.", "A079": "Backed up, unlinked, and reset \u2014 every linked file is untouched. Link them again to resume syncing.", "A080": "Saving a full backup before resetting.", "A081": "Ledger drop-downs set up for \u2026, \u2026 (a backup was saved first).", "A082": "Tidied up suppliers.", "A083": "Tidied up the Order Sheet.", "A084": "Tidied up Order Sheet suppliers.", "A085": "Merged one supplier into another.", "A086": "Removed a \"Batch Recipe\" entry that was never a real recipe \u2014 it was the spreadsheet's own blank template tab, getting reimported by mistake (now fixed).", "A087": "Fixed the spelling of CHEQUERS KITCHEN (was KIITCHEN) in \u2026 place.", "A088": "Added a link to the Help Files under Training Guide Links.", "A089": "A price was changed both on this computer and in the ledger. The newest change was kept. Click \u201cN differences\u201d at the top to check.", "A090": "Tidied the CHEQUERS KITCHEN items: \u2026 doubled items removed, \u2026 moved from an old spelling, \u2026 extra supplier record merged. Recipes now point at the item kept. A copy of the app data from before is in Documents \u203a Backups \u203a JSON.", "A091": "\u2026 suppliers removed from the app. Their empty headings in the ledger are cleared next, with a backup copy saved first.", "A092": "\u2026 empty supplier headings cleared from the ledger (a backup was saved first).", "A093": "Every supplier has at least one item, so there\u2019s nothing to remove.", "A094": "Slower computer: on. Saving to the ledger at most every 2 minutes while you work. / Slower computer: off. Saving 30 seconds after your last change.", "A095": "Moving to the ledger under its new name, made by another computer\u2026", "A096": "Making the ledger under its new name (without macros)\u2026", "A097": "The ledger is now the copy under its new name (with no macros). The old one is kept as it was.", "A098": "This ledger has moved to its new name. Switching to it.", "A099": "The Master Order File or Menu Backup file is now the copy under its new name. The old one is kept as it was.", "A100": "Made and linked the ledger, Master Order File and Menu Backup for a new client. Every other computer picks the same folder.", "A101": "Linked the ledger, Master Order File and Menu Backup another computer set up.", "B200": "You're ordering ZERO quantity of \"\u2026\" \u2014 are you sure?", "B201": "There is more than one \u201c\u2026\u201d under \u2026 on the Order Sheet. Delete the spare one first, then press Complete again.", "B202": "\u201c\u2026\u201d is already kept up to date by the batch recipe \u201c\u2026\u201d.", "B203": "\u201c\u2026\u201d uses its own Order Sheet item (directly or through another batch). Remove that ingredient first.", "B204": "That item isn't on the Order Sheet any more, so nothing was moved.", "B205": "That sub-heading isn't one of this supplier's any more, so nothing was moved.", "B206": "Same as the last order already saved for \u2026 \u2014 not logged again. Tick/untick something (or use Clear ticks first) to record a genuinely new order.", "B207": "No order-history tabs found in \u2026 \u2014 this app writes one per supplier, titled \u201cOrder history \u2014 <supplier>\u201d. Pick your Orders.xlsx (the master Orders file, not the Order Sheet workbook) instead if that's not what you chose.", "B208": "Nothing new to import \u2014 every ticked order was already saved here.", "B209": "That product code is already used by another item.", "B210": "\u201c\u2026\u201d is now flagged as price-varies \u2014 its price on screen stays as typed, but any order sent to the supplier will say \u201cPrice to be determined\u201d for it instead, and it won't be counted in that order's total.", "B211": "Give the item a name first.", "B212": "Changed on this computer and on another one since they last agreed, so this computer's version was kept:.", "B213": "Still reading \u2026 \u2014 give it a moment, then try Import again.", "B214": "A full backup is a .json file \u2014 that's a.\u2026 file. Pick Import again and choose the right kind.", "B215": "That's a backup (.json) file \u2014 pick Import again and choose Full backup.", "B216": "Choose an Excel .xlsx file or a CSV. Save older .xls files as .xlsx first.", "B217": "No worksheets found in that file.", "B218": "Another import started since this file was opened \u2014 pick Import again.", "B219": "No supplier names found in that file.", "B220": "Pick a supplier from the list first.", "B221": "Pick a supplier from the list first.", "B222": "Nothing ticked \u2014 nothing restored.", "B223": "Only web links can be opened here \u2014 use Manage Training Guide Links\u2026 to fix it.", "B224": "Add a link first \u2014 paste a web address or pick a local PDF.", "B225": "Only web links (http/https) can be added here \u2014 a browser tab can't keep a local file path.", "B226": "Items in the app have no matching row in the ledger and won't sync. Click \u201cN not in ledger\u201d at the top for the list.", "B227": "Updated from \u2026 \u2014 \u2026 supplier name(s) on the Order Sheet don't match an existing supplier:.", "B228": "Linked to \"\u2026\" \u2014 \u2026 supplier name(s) on the Order Sheet don't match an existing supplier:.", "B229": "Link a file at the top of the page first.", "B230": "Couldn't read the ledger yet (is your network drive connected, or is it open elsewhere?). Nothing is saved to it until it can be read. Trying again in 30 seconds.", "B231": "This ledger has no room for the save stamp (DATA tab, rows 3 to 7 under Home, must be empty), so other computers can't tell it has changed. Saving still works.", "B232": "Link a file at the top of the page first.", "B233": "Linked master Orders file \"\u2026\" \u2014 its Suppliers tab has supplier(s) this app doesn't have yet. Review them now before anything syncs, so nothing in the file gets overwritten.", "B234": "Checked the file for recipes: what was added, and any recipe that differs from the file (flagged on its card).", "B235": "Link a Menu Backup file first.", "B236": "Nothing in \u2026 yet \u2014 back up at least one recipe first.", "B237": "Link a master Orders file first (Suppliers tab toolbar).", "B238": "Tick at least one supplier.", "B239": "Items with zero quantity are highlighted on the Order Sheet.", "B240": "Assign a supplier to every checked item first.", "B241": "Assign a supplier to every checked item first.", "B242": "Assign a supplier to every checked item first.", "B243": "This supplier isn't set to order by email.", "B244": "Emailing suppliers is available in the desktop app, once email is set up in Settings.", "B245": "Your email app is taking a while, or the order may not have been attached. Check the email before sending.", "B246": "Switch to \"Send directly\" above to test the SMTP account.", "B247": "Enter an email address first.", "B248": "The ledger is open in Excel, so the drop-downs for \u2026, \u2026 will be set up once it's closed.", "B249": "Menu Item Recipe may have duplicates from a past sync glitch (now fixed) \u2014 worth checking:.", "B250": "Cleared \u2026 recipe ingredient quantity(ies) corrupted by a past sync glitch (now fixed) \u2014 please re-enter:.", "B251": "Removed \u2026 old leftover Order Sheet item(s) from a past import bug (now fixed) \u2014 the correct, up-to-date item was already filed properly: \u2026 (\u2026).", "B252": "Moved \u2026 item(s) off \"Unassigned\" \u2014 they were already filed correctly under their real supplier from a past import bug (now fixed).", "B253": "Removed \u2026 old leftover \"SUFFOLK_FARM.\" item(s) from the TRAYMOORE mix-up fixed back in 4.4.6 \u2014 the correct TRAYMOORE item was already filed properly.", "B254": "The ledger is open in Excel, so the empty supplier headings will be cleared once it\u2019s closed.", "B255": "The window stopped and was restarted. Your changes are kept and will be saved to the ledger.", "B257": "The ledger isn\u2019t in that folder. Pick the folder the first computer set up.", "B258": "Linked the ledger another computer set up; the Master Order File or Menu Backup wasn\u2019t in that folder, so it isn\u2019t linked yet.", "B256": "A file with the new name is already next to the Master Order File or Menu Backup file and isn't a copy of it, so this computer keeps using the old one.", "C400": "This computer can't save to the ledger right now (it is read-only, or not caught up with another computer yet).", "C401": "The ledger was saved by a newer version of the app on another computer. Update this computer before making changes.", "C402": "Can't complete \u201c\u2026\u201d yet: \u2026; \u2026.", "C403": "Can't complete \u201c\u2026\u201d yet: \u2026, \u2026 (a batch it uses) isn't up to date. Fix that batch first.", "C404": "Couldn't copy automatically \u2014 select the text in the box and copy it manually.", "C405": "Couldn't reorder \u2014 none of this order's items match anything currently on the Order Sheet for \u2026 (renamed, deleted, or moved supplier since).", "C406": "Couldn't read \u2026 \u2014 check it's an Orders file (or another file this app wrote order-history tabs into) and try again.", "C407": "Couldn't read that file.", "C408": "Can't move it there.", "C409": "Couldn't read that file.", "C410": "That JSON file doesn't look like a ledger backup.", "C411": "Couldn't parse that JSON file.", "C412": "Couldn't read that workbook.", "C413": "Couldn't read that file.", "C414": "Couldn't read that file.", "C415": "Couldn't import those rows.", "C416": "Couldn't read that file.", "C417": "Couldn't read that file.", "C418": "Restoring from backup isn't available in this build.", "C419": "That file can't be found anymore \u2014 use Manage Training Guide Links\u2026 to fix it.", "C420": "Couldn't open that link.", "C421": "Couldn't open that link.", "C422": "Couldn't open the file picker.", "C423": "Couldn't export this recipe \u2014 the reason is in the message.", "C424": "Export library failed to load \u2014 check your connection and try again.", "C425": "Couldn't export this recipe \u2014 the reason is in the message.", "C426": "Couldn't save to Documents/recipes (\u2026 unknown error\u2026) \u2014 saved as a normal download instead.", "C427": "Couldn't save to your Backups folder \u2014 downloaded a copy instead.", "C428": "Excel library failed to load \u2014 check your connection and try again.", "C429": "Couldn't save to your Backups folder \u2014 downloaded a copy instead.", "C430": "This app build can't save to your Backups folder yet \u2014 downloaded \"\u2026\" instead.", "C431": "Couldn't read the linked file to match its layout \u2014 exported a fresh copy instead.", "C432": "Couldn't save to your Backups folder \u2014 downloaded a copy instead.", "C433": "Couldn't save to your Backups folder \u2014 downloaded a copy instead.", "C434": "Today's automatic backup didn't run\u2026: \u2026 \u2014 \"Back up now\" still works as usual.", "C435": "Couldn't find your backup drive (the folder you picked in Settings) \u2014 today's automatic backup was saved to the standard Backups folder instead.", "C436": "Today's automatic backup didn't run \u2014 \"Back up now\" still works as usual.", "C437": "Couldn't save to the linked file \u2014 close it in Excel so the app can save to it.", "C438": "Couldn't save to the linked file \u2014 close it in Excel so the app can save to it.", "C439": "The ledger was saved by a newer version of the app on another computer. Update this computer; until then nothing is saved to the ledger.", "C440": "The ledger keeps changing on another computer, so this computer's changes weren't saved yet. They'll be saved on the next try.", "C441": "Couldn't add rows to Order_Sheet in the ledger. Those items weren't added this time; prices still sync. The app tries again on the next save.", "C442": "Couldn't sync to the linked file \u2014 app error.", "C443": "No room in a supplier's block: some items weren't added. Close the ledger in Excel; if it keeps happening, use Send files to support.", "C444": "The ledger keeps changing on another computer, so this computer's changes weren't saved yet. They'll be saved on the next try.", "C445": "Couldn't sync to the linked file \u2014 app error.", "C446": "The ledger was saved by a newer version of the app on another computer. Update this computer; until then nothing is saved to the ledger.", "C447": "Couldn't read the linked file \u2014 is it still there?", "C448": "Couldn't link that file: \u2026 unknown error.", "C449": "Couldn't read \u2026 \u2014 is it still there, or open elsewhere?", "C450": "The ledger was saved by a newer version of the app on another computer. Update this computer; until then nothing is saved to the ledger.", "C451": "Couldn't update the Master Order File. Close it in Excel (or check it isn't damaged) and try again. Nothing was changed.", "C452": "Couldn't update the Master Order File. Close it in Excel (or check it isn't damaged) and try again. Nothing was changed.", "C453": "Couldn't sync the master Orders file \u2014 its Suppliers tab has \u2026 supplier(s) this app doesn't have yet (\u2026, \u2026). Review them below \u2014 nothing was changed in the file so they're not lost.", "C454": "The Master Order File keeps changing on another computer, so it wasn't updated this time. Try Sync again in a moment.", "C455": "Couldn't update the master Orders file \u2014 it's in use or not allowed (\u2026). If it isn't open in Excel, check your network drive is connected and try Sync again.\u2026 \u2014 \u2026 unknown reason.", "C456": "Couldn't update the master Orders file \u2014 app error.", "C457": "Couldn't link that file: \u2026 unknown error.", "C458": "Couldn't update the Menu Backup file. Close it in Excel (or check it isn't damaged) and try again. Nothing was changed.", "C459": "Couldn't update the Menu Backup file. Close it in Excel (or check it isn't damaged) and try again. Nothing was changed.", "C460": "Couldn't update the Menu Backup file \u2014 close it in Excel so the app can save to it.", "C461": "Couldn't update the Menu Backup file \u2014 close it in Excel so the app can save to it.", "C462": "Couldn't read \u2026 \u2014 it may be open elsewhere. Nothing changed.", "C463": "Couldn't read \u2026 \u2014 it may be open elsewhere or in an unexpected format.", "C464": "Couldn't read that file.", "C465": "Couldn't read \u2026 \u2014 check it's your linked ledger spreadsheet, a Menu Backup file, or another file this app wrote recipe tabs into, and try again.", "C466": "Couldn't read that file.", "C467": "Couldn't link that file: \u2026 unknown error.", "C468": "The ledger is open in Excel. Close it there, then click Set up in Excel again.", "C469": "Couldn't check whether the ledger is open in Excel; nothing was changed.", "C470": "Couldn't create the stock count sheet.", "C471": "Couldn't save to Documents/orders (\u2026 unknown error\u2026) \u2014 downloading instead.", "C472": "Couldn't save to Documents/orders \u2014 downloading instead.", "C473": "Couldn't generate the document \u2014 the reason is in the message.", "C474": "Zip library failed to load.", "C475": "Couldn't generate documents \u2014 the reason is in the message.", "C476": "Couldn't open your email app \u2014 the reason is in the message.", "C477": "Couldn't send the email \u2014 the reason is in the message.", "C478": "Couldn't email the order \u2014 the reason is in the message.", "C479": "Couldn't set that folder.", "C480": "Couldn't save settings \u2014 the reason is in the message.", "C481": "Test email failed \u2014 the reason is in the message.", "C482": "Backup couldn't be saved \u2014 resetting anyway.", "C483": "The ledger stayed open in Excel, so the drop-downs for \u2026, \u2026 weren't set up. The shield shows what's needed.", "C484": "Couldn't set up the drop-downs for \u2026, \u2026 automatically. The shield shows what's needed.", "C485": "The ledger stayed open in Excel, so the empty supplier headings weren\u2019t cleared. The shield lists them, with Clear all.", "C487": "Couldn\u2019t make the ledger under its new name. You can carry on as before; the app will ask again next time.", "C488": "This ledger has moved, but the file it moved to isn\u2019t this ledger. Nothing is saved to the ledger until that\u2019s sorted out: link the right file in Settings, or use Send files to support.", "C490": "One of the new client\u2019s files is already in that folder, so nothing was made. If another computer set them up, use those.", "C492": "Couldn\u2019t make the ledger under its new name yet. Nothing is saved to the old ledger; the app tries again every minute.", "C491": "Couldn\u2019t set up the new client\u2019s files. Nothing is linked yet; try again, or link each file in Settings.", "C489": "Couldn\u2019t copy the Master Order File or Menu Backup file to its new name. The app carries on with the old file and tries again next time it opens.", "C486": "Couldn\u2019t clear the empty supplier headings from the ledger automatically (\u2026). The shield lists them, with Clear all."};
 function codedMessage(code, text){
   if(!text) return text;
   try{ countMessageCode(code, text); }catch(e){}
@@ -16725,6 +16726,17 @@ function suppliersTabFirst(wb){
   sws.views = [{ state: "frozen", ySplit: 2, tabSelected: true }];
   wb.views = [{ x: 0, y: 0, width: 20000, height: 12000, firstSheet: 0, activeTab: 0, visibility: "visible" }];
 }
+// 1.0.6 — what the Suppliers tab says for each supplier, in the form mergeSuppliersFromWorksheet reads it back
+function suppliersSheetBase(){
+  var b = {};
+  (state.suppliers || []).forEach(function(s){
+    if(!s || !s.name) return;
+    var label = (ORDERING_METHODS.filter(function(m){ return m[0] === (s.orderingMethod || ""); })[0] || [null, s.orderingMethod || ""])[1];
+    b[supplierKeyOf(s.name)] = { address: String(s.address||"").trim(), email: String(s.email||"").trim(), orderingMethod: String(normalizeOrderingMethodText(label) || "").trim(),
+      phone: String(s.phone||"").trim(), accountNumber: String(s.accountNumber||"").trim(), notes: String(s.notes||"").trim() };
+  });
+  return b;
+}
 function buildSuppliersWorksheet(wb){
   var existing = wb.getWorksheet("Suppliers");
   if(existing) wb.removeWorksheet(existing.id);
@@ -17145,6 +17157,10 @@ function mergeSuppliersFromWorksheet(ws){
   var changed = false;
   var unmatched = [];
   var unmatchedSeen = {};
+  // 1.0.6 (Codex 1.0.6 #2) — what this computer last wrote to the Suppliers tab, per supplier. A cell that still
+  // says that wasn't changed in Excel, so it never undoes a newer change (for example one from the online copy).
+  var supBase = (state.meta && state.meta.mofSupplierBase) || null, conflicts = [];
+  var cloudOn = !!(state.meta && state.meta.cloud && state.meta.cloud.accountId);
   for(var r=headerRowIdx+1; r<=ws.rowCount; r++){
     var row = ws.getRow(r);
     var name = cellTextValue(row, nameCol);
@@ -17173,12 +17189,28 @@ function mergeSuppliersFromWorksheet(ws){
       accountNumber: cellTextValue(row, acctCol),
       notes: cellTextValue(row, notesCol)
     };
+    var base = supBase && supBase[supplierKeyOf(rec.name)];
     Object.keys(fields).forEach(function(k){
-      var v = fields[k];
-      if(v && rec[k] !== v){ rec[k] = v; changed = true; }
+      var v = fields[k], cur = String(rec[k] == null ? "" : rec[k]).trim();
+      if(!v || cur === String(v).trim()) return;
+      if(base){
+        var was = String(base[k] == null ? "" : base[k]).trim();
+        if(was === String(v).trim()) return;  // not changed in the file since this computer wrote it: the app's value stands
+        if(cur !== was && cur){ conflicts.push({ supplier: rec.name, field: k, kept: cur, file: v }); return; } // changed in both: keep the app's, say so
+      } else if(cloudOn && cur){ conflicts.push({ supplier: rec.name, field: k, kept: cur, file: v }); return; } // nothing to compare with: keep the app's, say so
+      rec[k] = v; changed = true;
     });
   }
-  return { changed:changed, unmatched:unmatched };
+  if(conflicts.length) reportSupplierSheetConflicts(conflicts);
+  return { changed:changed, unmatched:unmatched, conflicts:conflicts };
+}
+// 1.0.6 (Codex 1.0.6 round 2) — a supplier detail changed both here (for example from the online copy) and in the
+// Master Order File: the app's value is kept and written back, and this says which, so nothing changes unseen
+var SUPPLIER_FIELD_LABEL = { address: "address", email: "email", orderingMethod: "ordering method", phone: "phone", accountNumber: "account number", notes: "notes" };
+function reportSupplierSheetConflicts(list){
+  var bits = list.slice(0, 3).map(function(c){ return c.supplier + " " + (SUPPLIER_FIELD_LABEL[c.field] || c.field) + " (the file said \u201c" + c.file + "\u201d)"; });
+  toast("B290", "The Master Order File and this app had different supplier details, so the app\u2019s were kept: " + bits.join("; ") + (list.length > 3 ? " and " + (list.length - 3) + " more" : "") + ". Change them on the Suppliers tab if the file was right.", 20000);
+  try{ if(window.desktopErrorLog && window.desktopErrorLog.write) list.forEach(function(c){ window.desktopErrorLog.write("Supplier detail kept", c.supplier + " " + c.field + ": kept \u201c" + c.kept + "\u201d, the Master Order File said \u201c" + c.file + "\u201d", "Master Order File", (state.meta && state.meta.computerName) || ""); }); }catch(e){}
 }
 
 // Read-modify-write against the linked master file: loads whatever's there
@@ -17208,7 +17240,7 @@ function writeMasterOrdersFile(){
 function writeMasterOrdersFileOnce(attempt){
   if(!isOrdersSyncAvailable() || !ordersSyncState.linkedPath) return Promise.resolve();
   if(!attempt && brandFileMoveDue("orders")) return moveLinkedFileToBrandName("orders").then(function(){ return writeMasterOrdersFileOnce(1); }, function(){ return writeMasterOrdersFileOnce(1); }); // 1.0.4
-  var orderTabsDone = null, mofReadSha = null; // V6.1.0
+  var orderTabsDone = null, mofReadSha = null, supBaseWritten = null; // V6.1.0; 1.0.6 supBaseWritten
   if(typeof ExcelJS === "undefined") return Promise.resolve();
   var abortMsg = "Couldn't update " + (ordersSyncState.linkedName||"the master Orders file") + " — close it in Excel (or check it isn't corrupted) and try again. Nothing was changed.";
   return window.desktopOrdersSync.readFile().then(function(result){
@@ -17268,6 +17300,7 @@ function writeMasterOrdersFileOnce(attempt){
       return null;
     }
     buildSuppliersWorksheet(wb);
+    supBaseWritten = suppliersSheetBase(); // 1.0.6 — kept once the file is saved (below)
     orderTabsDone = addNewOrdersToSupplierSheets(wb); // V6.1.0
     var ordersUsedNames = {};
     wb.worksheets.forEach(function(ws){ ordersUsedNames[ws.name] = true; });
@@ -17288,6 +17321,7 @@ function writeMasterOrdersFileOnce(attempt){
         toast("C455", "Couldn't update " + (ordersSyncState.linkedName||"the master Orders file") + (/EBUSY|EPERM|EACCES|locked/i.test(why) ? " — it's in use or not allowed (" + why + "). If it isn't open in Excel, check your network drive is connected and try Sync again." : " — " + (why || "unknown reason")), 15000);
         return false;
       }
+      if(supBaseWritten){ state.meta.mofSupplierBase = supBaseWritten; try{ window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} } // 1.0.6
       // V6.1.0 — these orders are on their supplier's tab now: never added again
       if(orderTabsDone && orderTabsDone.ids.length){
         var ids = {}; orderTabsDone.ids.forEach(function(id){ ids[id] = true; });
@@ -20321,6 +20355,10 @@ resetConfirmModal.addEventListener("click", function(e){ if(e.target === resetCo
 // afterwards and touch a linked file, and so no link silently
 // reconnects on next launch. This never writes to any spreadsheet.
 function performLocalReset(){
+  // 1.0.6 (Codex 1.0.6 #1) — sign out of the online copy first, so a sync that is still running can't read the
+  // emptied app as "everything was deleted" and delete the business's records online. Signing in again later
+  // starts afresh and takes everything back in from the online copy.
+  try{ if(window.klCloud && typeof window.klCloud.signOut === "function") window.klCloud.signOut(); }catch(e){}
   clearTimeout(autoExportTimer);
   if(typeof supplierOrdersSyncTimer !== "undefined") clearTimeout(supplierOrdersSyncTimer);
   if(typeof menuBackupSyncTimer !== "undefined") clearTimeout(menuBackupSyncTimer);
@@ -22179,6 +22217,487 @@ maybeRunDailyAutoBackup();
 setInterval(applyBackupFlashState, 5*60*1000);
 window.addEventListener("focus", applyBackupFlashState);
 
+
+// ==== BEGIN online copy (app/cloud-sync.js, Ledger-app main 8511484) ====
+/* Kitchen Ledger: online copy (Supabase).
+ *
+ * Built into the end of the app's main script (see scripts/build.js), so it
+ * can use the app's own state, persist(), renderAll() and helpers.
+ * It keeps items, suppliers, recipes and saved orders in step with an online
+ * table, so iPads and iPhones (which can't reach the network-drive files) see
+ * the same data. The desktop app's Excel files are not touched by this file.
+ *
+ * How it decides what to do, per record:
+ *   changed only online          -> taken in
+ *   changed only here            -> sent up
+ *   changed in both              -> this device's version is kept and sent up
+ *   deleted on either side       -> deleted everywhere, even if edited elsewhere
+ *                                   (a deleted row stays online)
+ * "Changed" means its fingerprint differs from the last one both sides agreed
+ * on (state.meta.cloud.base). That base lives inside the app's own state, so a
+ * "Restore everything" brings back a base that matches the restored data and
+ * never turns the restore into deletions.
+ *
+ * Every record has a cloudId. Records without one take the id of an online
+ * record with the same name. On a device's first sync, an unchanged old copy
+ * of something deleted elsewhere takes the deleted record's id, so it is
+ * deleted here too instead of coming back.
+ *
+ * A device's ledger belongs to the first account it syncs with; signing in
+ * with another account never sends this ledger there.
+ */
+(function () {
+  "use strict";
+
+  var cfg = (window.klBrand && window.klBrand.cloud) || (window.LEDGER_CLIENT && window.LEDGER_CLIENT.cloud) || null;
+  if (!cfg || !cfg.url || !cfg.key || typeof state === "undefined" || typeof persist !== "function") return;
+
+  var URL_BASE = String(cfg.url).replace(/\/+$/, "");
+  var KEY = String(cfg.key);
+  var TABLE = URL_BASE + "/rest/v1/ledger_records";
+  var SESSION_KEY = "kl-cloud-session:" + URL_BASE;
+  var EVERY_MS = 30000;
+  var KINDS = ["item", "supplier", "recipe", "order"];
+
+  // ---------- small helpers ----------
+  function stable(v) { // JSON with sorted keys, so the same record always gives the same text
+    if (v === undefined) return undefined;
+    if (v === null || typeof v !== "object") return JSON.stringify(v);
+    if (Array.isArray(v)) return "[" + v.map(function (x) { var s = stable(x); return s === undefined ? "null" : s; }).join(",") + "]";
+    return "{" + Object.keys(v).sort().filter(function (k) { return v[k] !== undefined; })
+      .map(function (k) { return JSON.stringify(k) + ":" + stable(v[k]); }).join(",") + "}";
+  }
+  function fpOf(data) { return sharedFingerprint(stable(data)); }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function newId(kind) { return kind + "_" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : uid("c")); }
+  function computer() { try { return String((state.meta && state.meta.computerName) || "") || "This device"; } catch (e) { return "This device"; } }
+  function cloudMeta() {
+    state.meta = state.meta || {};
+    var m = state.meta.cloud = state.meta.cloud || {};
+    m.base = m.base || {};      // "kind:id" -> { fp, nk }  (nk = name key, for first meetings)
+    m.lastRev = m.lastRev || 0; // highest server rev taken in
+    return m;
+  }
+
+  // ---------- records in this device's state ----------
+  function itemData(it) { var d = clone(it); delete d.id; delete d.cloudId; delete d.ledgerPrevName; return d; }
+  function supplierData(s) { var d = clone(s); delete d.id; delete d.cloudId; return d; }
+  function recipeData(r) { var d = recipeToShared(r); delete d.sid; d.sharedId = r.sharedId || null; return JSON.parse(JSON.stringify(d)); }
+  function orderData(o) { return orderToShared(o).order; }
+
+  var LIST = {
+    item: function () { return state.items; },
+    supplier: function () { return state.suppliers; },
+    recipe: function () { return state.recipes; },
+    order: function () { return state.orders; }
+  };
+  var DATA = { item: itemData, supplier: supplierData, recipe: recipeData, order: orderData };
+  var NAMEKEY = {
+    item: function (d) { return keyOf(d.supplier, d.name); },
+    supplier: function (d) { return String(d.name || "").trim().toLowerCase(); },
+    recipe: function (d) { return (d.type === "menuitem" ? "b:" : "m:") + recipeKeyOf(d.name); },
+    order: function () { return null; } // orders already share one id everywhere
+  };
+  function idOf(kind, obj) { return kind === "order" ? obj.id : obj.cloudId; }
+
+  function snapshot() { // "kind:id" -> { obj, data, fp, nk }
+    var out = {};
+    KINDS.forEach(function (kind) {
+      (LIST[kind]() || []).forEach(function (obj) {
+        var id = idOf(kind, obj); if (!id) return;
+        var data = DATA[kind](obj);
+        out[kind + ":" + id] = { kind: kind, id: id, obj: obj, data: data, fp: fpOf(data), nk: NAMEKEY[kind](data) };
+      });
+    });
+    return out;
+  }
+
+  // Records made before this device met the online copy get a cloudId: the
+  // id of an online record with the same name that no record here uses yet,
+  // or a new one.
+  function giveIds(live, gone) {
+    var m = cloudMeta(), used = {};
+    ["item", "supplier", "recipe"].forEach(function (kind) {
+      LIST[kind]().forEach(function (o) { if (o.cloudId) used[kind + ":" + o.cloudId] = true; });
+    });
+    var known = {}; // "kind|nk" -> [ids]: live ones from the base and the rows just fetched, then deleted ones
+    function add(k, ids) { (known[k] = known[k] || []).push.apply(known[k], ids); }
+    Object.keys(m.base).forEach(function (k) { var b = m.base[k]; if (b.nk && !b.deleted) add(k.split(":")[0] + "|" + b.nk, [k.slice(k.indexOf(":") + 1)]); });
+    Object.keys(live).forEach(function (k) { add(k, live[k]); });
+    var changed = false;
+    ["item", "supplier", "recipe"].forEach(function (kind) {
+      LIST[kind]().forEach(function (o) {
+        if (o.cloudId) return;
+        var data = DATA[kind](o), nk = NAMEKEY[kind](data), fp;
+        var free = (known[kind + "|" + nk] || []).filter(function (id) { return !used[kind + ":" + id]; });
+        // a deleted one only when this is exactly the copy that was deleted,
+        // so a different record that happens to share the name is never lost
+        if (!free.length) free = (gone[kind + "|" + nk] || []).filter(function (t) {
+          return !used[kind + ":" + t.id] && t.fp === (fp = fp || fpOf(data));
+        }).map(function (t) { return t.id; });
+        o.cloudId = free[0] || newId(kind);
+        used[kind + ":" + o.cloudId] = true; changed = true;
+      });
+    });
+    return changed;
+  }
+
+  // The versions a deleted record is known to have had, as { nk, fp } pairs:
+  // the server's last live version ("last"/"was", stamped by the database)
+  // and the version each deleting device had ("seen").
+  function deletedVersions(kind, d) {
+    var out = [];
+    if (!d || typeof d !== "object") return out;
+    if (d.last && d.was) { try { out.push({ nk: NAMEKEY[kind](d.last), fp: d.was }); } catch (e) {} }
+    (Array.isArray(d.seen) ? d.seen : []).forEach(function (v) {
+      if (v && v.nk && v.fp) out.push({ nk: v.nk, fp: v.fp });
+      else if (typeof v === "string" && d.nk) out.push({ nk: d.nk, fp: v }); // an earlier single value, kept in the list by the database
+    });
+    if (d.nk && typeof d.was === "string") out.push({ nk: d.nk, fp: d.was });   // earlier test rows
+    if (d.nk && typeof d.seen === "string") out.push({ nk: d.nk, fp: d.seen });
+    return out;
+  }
+
+  // ---------- applying an online record here ----------
+  function applyRemote(row, local) {
+    var kind = row.kind, list = LIST[kind]();
+    if (row.deleted) {
+      if (!local) return;
+      var o = local.obj, i = list.indexOf(o);
+      if (i >= 0) list.splice(i, 1);
+      if (kind === "item") tombstoneAdd("items", keyOf(o.supplier, o.name));
+      if (kind === "supplier") tombstoneAdd("suppliers", supplierKeyOf(o.name));
+      if (kind === "recipe") tombstoneAdd("recipes", recipeKeyOf(o.name));
+      return;
+    }
+    var d = row.data;
+    if (kind === "item" || kind === "supplier") {
+      var obj = Object.assign({ id: local ? local.obj.id : uid(kind) }, clone(d), { cloudId: row.key });
+      if (local) { if (local.obj.ledgerPrevName) obj.ledgerPrevName = local.obj.ledgerPrevName; list[list.indexOf(local.obj)] = obj; }
+      else list.push(obj);
+    } else if (kind === "recipe") {
+      var rec = clone(d); rec.sid = d.sharedId || (local && local.obj.sharedId) || undefined; delete rec.sharedId;
+      var r = applySharedRecipe(rec, local ? local.obj : null);
+      r.cloudId = row.key;
+    } else if (kind === "order") {
+      var ord = clone(d);
+      if (local) list[list.indexOf(local.obj)] = Object.assign(local.obj.mofWritten ? { mofWritten: local.obj.mofWritten } : {}, ord);
+      else list.push(ord);
+    }
+  }
+
+  // ---------- talking to Supabase ----------
+  // `gen` changes whenever the signed-in account changes (sign in, sign out,
+  // or another tab doing either). Work started under an older gen is dropped
+  // when it finishes, so a late reply can never undo a sign-out.
+  var session = null, gen = 0;
+  function readSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { return null; } }
+  session = readSession();
+  function storeSession(s) { session = s; try { if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s)); else localStorage.removeItem(SESSION_KEY); } catch (e) {} }
+  function signOut() { gen++; rejectRetried = false; storeSession(null); }
+  function stale(g) { if (g !== gen) throw Object.assign(new Error("Signed out"), { stale: true }); }
+  window.addEventListener("storage", function (e) {
+    if (e.key !== SESSION_KEY) return;
+    var s = readSession();
+    if (!s || !session || s.uid !== session.uid) { gen++; rejectRetried = false; }
+    session = s; draw();
+  });
+
+  function authCall(grant, body, g) {
+    return fetch(URL_BASE + "/auth/v1/token?grant_type=" + grant, {
+      method: "POST", headers: { apikey: KEY, "Content-Type": "application/json" }, body: JSON.stringify(body)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok || !j.access_token) { var e = new Error(j.error_description || j.msg || j.error || ("HTTP " + r.status)); e.status = r.status; throw e; }
+        stale(g);
+        var u = j.user || {};
+        storeSession({ access: j.access_token, refresh: j.refresh_token, expires: Date.now() + (j.expires_in || 3600) * 1000,
+          uid: u.id || (session && session.uid) || "", email: u.email || (session && session.email) || "" });
+        return session;
+      });
+    });
+  }
+  function token(g) {
+    stale(g);
+    if (!session) return Promise.reject(Object.assign(new Error("Not signed in"), { status: 401 }));
+    if (Date.now() < session.expires - 60000) return Promise.resolve(session.access);
+    return authCall("refresh_token", { refresh_token: session.refresh }, g).then(function (s) { return s.access; })
+      .catch(function (e) { if ((e.status === 400 || e.status === 401) && g === gen) signOut(); throw e; });
+  }
+  function api(path, opts, g) {
+    return token(g).then(function (t) {
+      var h = Object.assign({ apikey: KEY, Authorization: "Bearer " + t, "Content-Type": "application/json" }, (opts && opts.headers) || {});
+      return fetch(TABLE + path, Object.assign({}, opts, { headers: h }));
+    }).then(function (r) {
+      if (r.status === 401 && g === gen) signOut();
+      if (!r.ok) return r.text().then(function (t) { var e = new Error("HTTP " + r.status + " " + t.slice(0, 200)); e.status = r.status; throw e; });
+      stale(g);
+      return r.text().then(function (t) { return t ? JSON.parse(t) : null; }); // an upload answers with no body
+    });
+  }
+  function pullSince(rev, g) {
+    var rows = [];
+    function page(after) {
+      return api("?select=kind,key,data,fp,deleted,rev,updated_by&rev=gt." + after + "&order=rev.asc&limit=1000", null, g).then(function (got) {
+        rows = rows.concat(got);
+        return got.length === 1000 ? page(got[got.length - 1].rev) : rows;
+      });
+    }
+    return page(rev);
+  }
+  // Sends the changes in batches. Each change's new agreed state is only
+  // recorded once its batch has been accepted, so anything that didn't go up
+  // is tried again next time.
+  function push(out, base, g, info) {
+    var chunks = []; for (var i = 0; i < out.length; i += 500) chunks.push(out.slice(i, i + 500));
+    return chunks.reduce(function (p, c) {
+      return p.then(function () {
+        return api("?on_conflict=owner,kind,key&select=kind,key,fp,deleted", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+          body: JSON.stringify(c.map(function (x) { return x.row; })) }, g)
+          .then(function (back) {
+            // only what the server says it now holds counts as agreed
+            var got = {}; (Array.isArray(back) ? back : []).forEach(function (r) { got[r.kind + ":" + r.key] = r; });
+            var missing = 0, rejected = 0;
+            c.forEach(function (x) {
+              var r = got[x.k];
+              if (!r) { missing++; return; }
+              if (r.fp === x.row.fp && !!r.deleted === x.row.deleted) base[x.k] = x.nb;
+              else rejected++; // the server kept something else (a deletion it won't undo); fetched straight after
+            });
+            info.rejected += rejected;
+            if (missing) throw new Error("The online copy didn't confirm " + missing + " change" + (missing === 1 ? "" : "s") + "; will retry");
+          });
+      });
+    }, Promise.resolve());
+  }
+
+  // Ingredients and finished items that came in before their item did are
+  // linked once the item is here.
+  function relink() {
+    if (typeof resolveSharedItemRef !== "function") return;
+    state.recipes.forEach(function (r) {
+      (r.ingredients || []).forEach(function (g) { if (!g.itemId && g.sharedRef) { var id = resolveSharedItemRef(g.sharedRef); if (id) { g.itemId = id; delete g.customName; delete g.sharedRef; g.customCostPerGramOrEach = null; } } });
+      if (!r.completedItemId && r.sharedCompleted) { var cid = resolveSharedItemRef(r.sharedCompleted); if (cid) { r.completedItemId = cid; delete r.sharedCompleted; } }
+    });
+  }
+
+  // ---------- one sync ----------
+  var running = null, queued = null, rejectRetried = false, status = { state: "idle", at: null, error: "" };
+  var APPLY_ORDER = { item: 0, supplier: 1, recipe: 2, order: 3 };
+
+  // This device's ledger belongs to one online account. Another account's
+  // sign-in never syncs it, so one business's data can't go to another.
+  function accountProblem(m) {
+    if (!session) return "";
+    if (m.accountId) return m.accountId === session.uid ? "" : (m.account || "another account");
+    if (m.account && m.account !== session.email) return m.account; // linked before ids were kept
+    return "";
+  }
+
+  function syncOnce() {
+    // already syncing: one more sync follows it, and the caller waits for that
+    if (running) { if (!queued) queued = running.then(function () { queued = null; return syncOnce(); }); return queued; }
+    if (!session) { setStatus("signed-out"); return Promise.resolve(); }
+    if (typeof navigator !== "undefined" && navigator.onLine === false) { setStatus("offline"); return Promise.resolve(); }
+    var m = cloudMeta(), g = gen;
+    var other = accountProblem(m);
+    if (other) { setStatus("error", "This device's ledger is linked to " + other + ". Sign out and sign in with that account."); return Promise.resolve(); }
+    if (!m.accountId && session.uid) { m.accountId = session.uid; m.account = session.email; }
+    setStatus("syncing");
+    var changed = false, applied = 0, conflicts = 0, sent = 0, info = { rejected: 0 };
+    running = pullSince(m.lastRev, g).then(function (rows) {
+      stale(g);
+      var firstMeeting = !m.lastRev;
+      // first meetings: give local records the ids of same-named online ones,
+      // live ones first, then (on this device's very first sync) deleted ones
+      var live = {}, gone = {};
+      rows.forEach(function (r) {
+        if (r.kind === "order" || !NAMEKEY[r.kind]) return;
+        if (r.deleted) {
+          if (firstMeeting) deletedVersions(r.kind, r.data).forEach(function (v) {
+            var k = r.kind + "|" + v.nk; (gone[k] = gone[k] || []).push({ id: r.key, fp: v.fp });
+          });
+          return;
+        }
+        var nk = r.data ? NAMEKEY[r.kind](r.data) : null;
+        if (nk) (live[r.kind + "|" + nk] = live[r.kind + "|" + nk] || []).push(r.key);
+      });
+      if (giveIds(live, gone)) changed = true;
+      var local = snapshot(), base = m.base, maxRev = m.lastRev;
+      var latest = {}; rows.forEach(function (r) { latest[r.kind + ":" + r.key] = r; if (r.rev > maxRev) maxRev = r.rev; });
+
+      // 1. online changes (items before recipes, so ingredients can link)
+      Object.keys(latest).filter(function (k) { return KINDS.indexOf(latest[k].kind) >= 0; })
+        .sort(function (a, b) { return APPLY_ORDER[latest[a].kind] - APPLY_ORDER[latest[b].kind]; })
+        .forEach(function (k) {
+          var r = latest[k], b = base[k], l = local[k];
+          var rfp = r.deleted ? "deleted" : r.fp, bfp = b ? (b.deleted ? "deleted" : b.fp) : null;
+          // nothing new online (but a deletion still applies to a record brought back here, e.g. by Undo)
+          if (rfp === bfp && !(r.deleted && l)) return;
+          if (r.deleted) { // a deletion wins over an edit made here
+            if (l) { applyRemote(r, l); applied++; }
+            base[k] = { fp: "deleted", nk: (r.data && r.data.nk) || (b && b.nk) || (l && l.nk) || null, deleted: true };
+            changed = true; return;
+          }
+          if (!l && b && !b.deleted) return; // deleted here: the deletion goes up below
+          if (l && l.fp === r.fp) { base[k] = { fp: r.fp, nk: l.nk }; changed = true; return; } // already the same
+          if (l && (!b || b.deleted || l.fp !== b.fp)) { conflicts++; return; } // changed here too: this device's version goes up below
+          applyRemote(r, l); applied++; changed = true;
+          base[k] = { fp: r.fp, nk: NAMEKEY[r.kind](r.data) };
+        });
+      if (applied) relink();
+      if (maxRev !== m.lastRev) { m.lastRev = maxRev; changed = true; }
+
+      // 2. this device's changes and deletions, compared with the agreed state
+      var now = snapshot(), out = [];
+      Object.keys(now).forEach(function (k) {
+        var n = now[k], b = base[k];
+        if (b && !b.deleted && b.fp === n.fp) return;
+        out.push({ k: k, nb: { fp: n.fp, nk: n.nk },
+          row: { kind: n.kind, key: n.id, data: n.data, fp: n.fp, deleted: false, updated_by: computer() } });
+      });
+      Object.keys(base).forEach(function (k) {
+        var b = base[k]; if (b.deleted || now[k]) return;
+        var kind = k.slice(0, k.indexOf(":")), id = k.slice(k.indexOf(":") + 1);
+        out.push({ k: k, nb: { fp: "deleted", nk: b.nk || null, deleted: true },
+          row: { kind: kind, key: id, data: b.nk ? { nk: b.nk, seen: [{ nk: b.nk, fp: b.fp }] } : null, fp: "deleted", deleted: true, updated_by: computer() } });
+      });
+      sent = out.length;
+      if (out.length) changed = true;
+      return push(out, base, g, info);
+    }).then(function () {
+      var retry = info.rejected && !rejectRetried;
+      rejectRetried = !!info.rejected;
+      if (info.rejected && !retry) { setStatus("error", "The online copy kept " + info.rejected + " deletion" + (info.rejected === 1 ? "" : "s") + " over changes made here"); return; }
+      if (retry) {
+        // edits to records deleted elsewhere: say so, and fetch the deletions now (once)
+        if (typeof toast === "function") toast("Online copy: " + info.rejected + " change" + (info.rejected === 1 ? " was" : "s were") + " not kept because " + (info.rejected === 1 ? "that record was" : "those records were") + " deleted on another device");
+        setTimeout(syncOnce, 0);
+      }
+      setStatus(info.rejected ? "syncing" : "synced", "", { applied: applied, sent: sent, conflicts: conflicts });
+    }, function (e) {
+      if (e && e.stale) return;
+      setStatus(session ? "error" : "signed-out", e && e.message ? e.message : String(e));
+    }).then(function () {
+      try {
+        if (changed) { // saved even after a sign-out, so the ledger and its agreed state stay together
+          quietPersist();
+          if (applied) { try { renderAll(); } catch (e) {} }
+        }
+      } catch (e) {
+        setStatus("error", "Couldn't save on this device: " + (e && e.message ? e.message : String(e)));
+      } finally {
+        running = null;
+      }
+    });
+    return running;
+  }
+
+  // persist() saves locally and starts the Excel sync as usual; this only
+  // saves, without scheduling another online sync for our own change.
+  var quiet = false;
+  function quietPersist() { quiet = true; try { persist(); } finally { quiet = false; } }
+
+  var origPersist = persist;
+  var soon = null;
+  persist = function () {
+    var r = origPersist.apply(this, arguments);
+    if (!quiet && session) { clearTimeout(soon); soon = setTimeout(syncOnce, 3000); }
+    return r;
+  };
+
+  // ---------- status chip and sign-in ----------
+  var chip = null;
+  function setStatus(s, err, info) {
+    status.state = s; status.error = err || "";
+    if (s === "synced") status.at = new Date();
+    if (info && info.applied && typeof toast === "function") toast("Online copy: took in " + info.applied + " change" + (info.applied === 1 ? "" : "s") + " from other devices");
+    draw();
+  }
+  function draw() {
+    if (!chip) return;
+    var t, colour = "#666";
+    if (!session) { t = "Online copy: sign in"; colour = "#b45309"; }
+    else if (status.state === "syncing") t = "Online copy: syncing…";
+    else if (status.state === "offline") t = "Online copy: offline, will sync";
+    else if (status.state === "error") { t = "Online copy: couldn't sync, will retry"; colour = "#b91c1c"; }
+    else if (status.at) { t = "Online copy: synced " + status.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); colour = "#166e30"; }
+    else t = "Online copy";
+    chip.textContent = "☁ " + t;
+    chip.style.color = colour;
+    chip.title = status.error ? status.error : (session ? "Signed in as " + session.email : "");
+  }
+  function addChip() {
+    var pill = document.getElementById("status-pill");
+    chip = document.createElement("button");
+    chip.type = "button"; chip.id = "cloud-chip";
+    chip.style.cssText = "border:1px solid #ddd;background:#fff;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer;margin-left:8px;white-space:nowrap";
+    chip.addEventListener("click", openPanel);
+    if (pill && pill.parentNode) pill.parentNode.insertBefore(chip, pill.nextSibling);
+    else { chip.style.position = "fixed"; chip.style.right = "12px"; chip.style.bottom = "12px"; chip.style.zIndex = 9999; document.body.appendChild(chip); }
+    draw();
+  }
+  function openPanel() {
+    var old = document.getElementById("cloud-panel"); if (old) old.remove();
+    var wrap = document.createElement("div"); wrap.id = "cloud-panel";
+    wrap.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px";
+    var box = document.createElement("div");
+    box.style.cssText = "background:#fff;color:#222;border-radius:12px;max-width:380px;width:100%;padding:20px;font:14px/1.45 -apple-system,'Segoe UI',sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.25)";
+    function close() { wrap.remove(); }
+    wrap.addEventListener("click", function (e) { if (e.target === wrap) close(); });
+    document.addEventListener("keydown", function esc(e) { if (e.key === "Escape") { close(); document.removeEventListener("keydown", esc); } });
+    if (session) {
+      box.innerHTML = '<h3 style="margin:0 0 8px;font-size:16px">Online copy</h3>' +
+        '<p style="margin:0 0 6px">Signed in as <b></b>.</p>' +
+        '<p style="margin:0 0 14px;color:#555">This device syncs every 30 seconds while it\'s online. Changes made offline go up when it\'s back.</p>' +
+        '<p class="err" style="color:#b91c1c;margin:0 0 10px"></p>' +
+        '<div style="display:flex;gap:8px;justify-content:flex-end"><button data-a="out">Sign out</button><button data-a="now" style="background:#166e30;color:#fff;border:0">Sync now</button></div>';
+      box.querySelector("b").textContent = session.email || "";
+      box.querySelector(".err").textContent = status.error || "";
+      box.querySelector('[data-a="now"]').onclick = function () { close(); syncOnce(); };
+      box.querySelector('[data-a="out"]').onclick = function () { signOut(); close(); setStatus("signed-out"); };
+    } else {
+      box.innerHTML = '<h3 style="margin:0 0 8px;font-size:16px">Sign in to the online copy</h3>' +
+        '<p style="margin:0 0 12px;color:#555">Use your business\'s ledger sign-in. Every device signed in with it shares the same items, suppliers, recipes and orders.</p>' +
+        '<form><label style="display:block;margin-bottom:8px">Email<br><input name="e" type="email" autocomplete="username" required style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ccc;border-radius:8px"></label>' +
+        '<label style="display:block;margin-bottom:12px">Password<br><input name="p" type="password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ccc;border-radius:8px"></label>' +
+        '<p class="err" style="color:#b91c1c;margin:0 0 10px"></p>' +
+        '<div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" data-a="cancel">Not now</button><button type="submit" style="background:#166e30;color:#fff;border:0">Sign in</button></div></form>';
+      var form = box.querySelector("form");
+      box.querySelector('[data-a="cancel"]').onclick = close;
+      form.onsubmit = function (e) {
+        e.preventDefault();
+        var err = box.querySelector(".err"); err.textContent = "Signing in…"; err.style.color = "#555";
+        var g = ++gen; rejectRetried = false;
+        authCall("password", { email: form.e.value.trim(), password: form.p.value }, g).then(function () {
+          var other = accountProblem(cloudMeta());
+          if (other) { signOut(); throw Object.assign(new Error(""), { other: other }); }
+          close(); setStatus("idle"); syncOnce();
+        }).catch(function (x) {
+          if (x && x.stale) return;
+          err.style.color = "#b91c1c";
+          err.textContent = x.other ? "This device's ledger is linked to " + x.other + ", so it can't sync with a different account. Sign in with that account."
+            : x.status === 400 ? "That email and password didn't match. Check them and try again." : "Couldn't reach the online copy. Check the internet connection and try again.";
+        });
+      };
+    }
+    box.querySelectorAll("button").forEach(function (b) { b.style.padding = b.style.padding || "8px 14px"; b.style.borderRadius = "8px"; b.style.cursor = "pointer"; if (!b.style.border) b.style.border = "1px solid #ccc"; if (!b.style.background) b.style.background = "#fff"; });
+    wrap.appendChild(box); document.body.appendChild(wrap);
+    var first = box.querySelector("input"); if (first) first.focus();
+  }
+
+  // ---------- start ----------
+  window.klCloud = { sync: syncOnce, status: function () { return Object.assign({ signedIn: !!session }, status); }, signOut: function () { signOut(); setStatus("signed-out"); } };
+  function start() {
+    addChip();
+    syncOnce();
+    setInterval(syncOnce, EVERY_MS);
+    window.addEventListener("online", function () { syncOnce(); });
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) syncOnce(); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+})();
+// ==== END online copy ====
 })();
 </script>
 <script>
