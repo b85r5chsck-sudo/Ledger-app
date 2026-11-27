@@ -182,6 +182,19 @@
     session = s; draw();
   });
 
+  // 1.0.7 sign-in fix — what went wrong, for the sign-in box and the error log (never the password or a token)
+  function signInDetail(x, password) {
+    try {
+      if (!x) return "unknown";
+      var msg = String(x.message || "");
+      var s = x.status ? "HTTP " + x.status + (msg && msg !== "HTTP " + x.status ? " \u2014 " + msg : "")
+        : (x.name && x.name !== "Error" ? String(x.name) + ": " : "") + (msg || String(x));
+      if (password) s = s.split(password).join("\u2022\u2022\u2022");          // never the password, even if a server repeats it
+      s = s.replace(/eyJ[\w-]+\.[\w-]+(\.[\w-]+)?/g, "\u2022\u2022\u2022")      // nor anything shaped like a token
+        .replace(/\b(sb_[a-z]+_|token[=:]\s*)[\w.-]+/gi, "$1\u2022\u2022\u2022");
+      return s.slice(0, 300) + (typeof navigator !== "undefined" && navigator.onLine === false ? " (this device says it is offline)" : "");
+    } catch (e) { return "unknown"; }
+  }
   function authCall(grant, body, g) {
     return fetch(URL_BASE + "/auth/v1/token?grant_type=" + grant, {
       method: "POST", headers: { apikey: KEY, "Content-Type": "application/json" }, body: JSON.stringify(body)
@@ -457,6 +470,13 @@
           err.style.color = "#b91c1c";
           err.textContent = x.other ? "This device's ledger is linked to " + x.other + ", so it can't sync with a different account. Sign in with that account."
             : x.status === 400 ? "That email and password didn't match. Check them and try again." : "Couldn't reach the online copy. Check the internet connection and try again.";
+          // 1.0.7 sign-in fix — the technical reason, under the friendly text and in the error log, so a failed sign-in can be diagnosed
+          if (!x.other) {
+            var why = signInDetail(x, form.p.value), small = document.createElement("span");
+            small.style.cssText = "display:block;margin-top:6px;color:#666;font-size:12px;word-break:break-word";
+            small.textContent = "Details: " + why; err.appendChild(small);
+            try { console.error("Online copy sign-in failed: " + why); } catch (e2) {}
+          }
         });
       };
     }

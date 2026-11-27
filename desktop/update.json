@@ -1,8 +1,8 @@
 {
-  "version": "1.0.7",
+  "version": "1.2.0",
   "minApp": "1.0.6",
-  "sha256": "58354022178c57cd235162b72956c17ac2767830566a2e339752c50ea257f7d2",
-  "notes": "Fixed: the ledger check now reads sub-headings that were recoloured in Excel (for example grey instead of blue), so items no longer show as being under a different sub-heading. “Keep the app’s sub-heading” no longer adds rows to the ledger when it can’t read a sub-heading, and says plainly if an item couldn’t be moved. New in the ledger check: repeated sub-headings with nothing under them can be tidied back to blank spare rows (a copy of the ledger is saved first).",
-  "sig": "5oSBlEDeDeMwemo+emnuxG/qc4QGOVboUjmH/VjB+1G+tSHoiJgVJt0ZUwYbefveLgdWzFrgL67SGC1ixj8oAA==",
-  "page": "index-1.0.7.html"
+  "sha256": "11891c4c4b259aceb42bb36d633b192848cf5aa9b0975a807d987df337f3b997",
+  "notes": "New look. Cleaner colours, a menu with icons, and a proper dark mode. Order Sheet: a one-line Priced by choice, shorter rows that fit the screen, supplier names that stay at the top as you scroll, and a Ticked only switch. Ordering: the order you are building is listed with its total, past orders fold up, a Recent orders page with a way back to it, and a red dot on suppliers with an order waiting. Recipes: Priced by as a drop-down, totals beside the ingredients on a wide screen, and a Method box that grows. Less-used buttons are under More. Costing opens on a period that has orders. Press / to search. Fixed: a failed sign-in to the online copy now shows the reason. Nothing you have saved changes.",
+  "sig": "pGk9hJuT+WzsResQyHp5rHot+TZl29WBY+lTrIbC4qZfAQOsMy6nOK4T5YSldGiHnuNW5SbJkRPDrk3lL+qYCA==",
+  "page": "index-1.2.0.html"
 }

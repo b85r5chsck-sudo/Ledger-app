@@ -1223,6 +1223,479 @@ table.ledger.costing-items{ min-width:0; }
 .files-node.missing .files-name{ color:var(--ink-faint); }
 .files-show{ margin-left:auto; }
 </style>
+<style id="v2-look">
+/* ============================================================
+   1.2.0 — THE NEW LOOK (made and tried as the V2 tester, 2.0.0 to 2.0.5) — one layer on top of the styles above.
+   Looks only: no element is renamed or moved, so every button and screen
+   works exactly as in 1.0.7. Remove this one <style> block to get the
+   1.0.7 look back.
+   The colours are set on <body> (not :root), so they win over every
+   older colour block above, in light and dark, for all four colour
+   settings, without needing stronger selectors.
+   Same page in the web app, the Mac app and the Windows app: system
+   fonts only, nothing downloaded.
+   ============================================================ */
+
+/* ---------- 1. colours: light ---------- */
+body{
+  --bg:#f3f4f1; --surface:#ffffff; --surface-2:#f7f8f5; --surface-3:#eceee9;
+  --border:#dfe2db; --border-soft:#eceee9;
+  --ink:#1b1f1c; --ink-muted:#5b635d; --ink-faint:#8e968f;
+  --accent:#2f7d32; --accent-strong:#1f5c22; --accent-soft:#edf6ec; --accent-line:#b9dbb7;
+  --good:#2f7d32; --good-soft:#edf6ec; --warn:#b4610b; --warn-soft:#fdf3e4;
+  --bad:#c62828; --bad-soft:#fdeeee; --info:#1f63c6; --info-soft:#eaf2fd;
+  --kind-size:#5b3fa0; --kind-size-soft:#f0ebfa; --kind-each:#9a5413; --kind-each-soft:#fbefe1;
+  --pending-bg:#fdeeee; --pending-bg-hover:#fbe1e1; --pending-border:#f2b8b8; --pending-text:#8e1f1f;
+  --group-bg:#fbf6e6; --group-line:#efe2b4; --group-ink:#4a3f17;
+  --on-accent:#ffffff;
+  --radius:10px; --radius-sm:7px;
+  --shadow:0 1px 2px rgba(20,24,21,.05), 0 1px 3px rgba(20,24,21,.04);
+  --shadow-lg:0 12px 32px -8px rgba(20,24,21,.22), 0 4px 10px -4px rgba(20,24,21,.10);
+  --focus:0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
+  --font-display:-apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body:-apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace;
+  --kl-side-w:224px;
+}
+:root[data-colour="blue"] body{ --accent:#1d5fd1; --accent-strong:#164aa6; --accent-soft:#ebf2fd; --accent-line:#b7cff5; }
+:root[data-colour="red"] body{ --accent:#c0392b; --accent-strong:#962b20; --accent-soft:#fcedeb; --accent-line:#f0bdb6;
+  /* red already means "needs attention", so pending orders go amber */
+  --pending-bg:#fdf3e4; --pending-bg-hover:#fbe8cc; --pending-border:#f0cf9c; --pending-text:#7a4708; }
+:root[data-colour="yellow"] body{ --accent:#a86b00; --accent-strong:#7f5100; --accent-soft:#fdf5e3; --accent-line:#ecd39a;
+  --kind-each:#1f4f82; --kind-each-soft:#e4eef9;
+  --group-bg:#f5f3ee; --group-line:#e2ddd0; --group-ink:#3d3a33; }
+
+/* ---------- 2. colours: dark (system setting, or the View menu) ---------- */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) body{
+    --bg:#121413; --surface:#1a1d1b; --surface-2:#202421; --surface-3:#282c29;
+    --border:#30352f; --border-soft:#262a27;
+    --ink:#e8ebe7; --ink-muted:#a3aba4; --ink-faint:#717a73;
+    --accent:#5cb860; --accent-strong:#8bd38e; --accent-soft:#1c2b1d; --accent-line:#2f5131;
+    --good:#6cc770; --good-soft:#1c2b1d; --warn:#e2a24c; --warn-soft:#2e2414;
+    --bad:#ef7b7b; --bad-soft:#341c1c; --info:#7eaef0; --info-soft:#17243a;
+    --kind-size:#bba4ec; --kind-size-soft:#2a2340; --kind-each:#e7ac6e; --kind-each-soft:#33261a;
+    --pending-bg:#3a1f1f; --pending-bg-hover:#462525; --pending-border:#6e3434; --pending-text:#f6b4b4;
+    --group-bg:#25231a; --group-line:#3a3622; --group-ink:#e9dcae;
+    --on-accent:#0f1410; color-scheme:dark;
+    --shadow:0 1px 2px rgba(0,0,0,.35);
+    --shadow-lg:0 16px 40px -10px rgba(0,0,0,.65), 0 4px 12px -4px rgba(0,0,0,.4);
+  }
+  :root[data-colour="blue"]:not([data-theme="light"]) body{ --accent:#6ea2f5; --accent-strong:#a3c4fa; --accent-soft:#172338; --accent-line:#284270; }
+  :root[data-colour="red"]:not([data-theme="light"]) body{ --accent:#ef7d6f; --accent-strong:#f6aba2; --accent-soft:#341c19; --accent-line:#6a332c;
+    --pending-bg:#33280f; --pending-bg-hover:#3e3013; --pending-border:#6a5222; --pending-text:#f2cf8d; }
+  :root[data-colour="yellow"]:not([data-theme="light"]) body{ --accent:#e0aa3e; --accent-strong:#f0c873; --accent-soft:#2e2512; --accent-line:#5c4920; --kind-each:#7eaef0; --kind-each-soft:#17243a; }
+}
+:root[data-theme="dark"] body{
+  --bg:#121413; --surface:#1a1d1b; --surface-2:#202421; --surface-3:#282c29;
+  --border:#30352f; --border-soft:#262a27;
+  --ink:#e8ebe7; --ink-muted:#a3aba4; --ink-faint:#717a73;
+  --accent:#5cb860; --accent-strong:#8bd38e; --accent-soft:#1c2b1d; --accent-line:#2f5131;
+  --good:#6cc770; --good-soft:#1c2b1d; --warn:#e2a24c; --warn-soft:#2e2414;
+  --bad:#ef7b7b; --bad-soft:#341c1c; --info:#7eaef0; --info-soft:#17243a;
+  --kind-size:#bba4ec; --kind-size-soft:#2a2340; --kind-each:#e7ac6e; --kind-each-soft:#33261a;
+  --pending-bg:#3a1f1f; --pending-bg-hover:#462525; --pending-border:#6e3434; --pending-text:#f6b4b4;
+  --group-bg:#25231a; --group-line:#3a3622; --group-ink:#e9dcae;
+  --on-accent:#0f1410; color-scheme:dark;
+  --shadow:0 1px 2px rgba(0,0,0,.35);
+  --shadow-lg:0 16px 40px -10px rgba(0,0,0,.65), 0 4px 12px -4px rgba(0,0,0,.4);
+}
+:root[data-theme="dark"][data-colour="blue"] body{ --accent:#6ea2f5; --accent-strong:#a3c4fa; --accent-soft:#172338; --accent-line:#284270; }
+:root[data-theme="dark"][data-colour="red"] body{ --accent:#ef7d6f; --accent-strong:#f6aba2; --accent-soft:#341c19; --accent-line:#6a332c;
+  --pending-bg:#33280f; --pending-bg-hover:#3e3013; --pending-border:#6a5222; --pending-text:#f2cf8d; }
+:root[data-theme="dark"][data-colour="yellow"] body{ --accent:#e0aa3e; --accent-strong:#f0c873; --accent-soft:#2e2512; --accent-line:#5c4920; --kind-each:#7eaef0; --kind-each-soft:#17243a; }
+
+/* ---------- 3. page and type ---------- */
+input[type=checkbox], input[type=radio]{ accent-color:var(--accent); }
+body{ background:var(--bg); color:var(--ink); font-family:var(--font-body); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+h1,h2,h3{ font-family:var(--font-display); font-weight:650; letter-spacing:-.01em; }
+:focus-visible{ outline:none; box-shadow:var(--focus); }
+::selection{ background:color-mix(in srgb, var(--accent) 25%, transparent); }
+
+/* ---------- 4. top bar ---------- */
+.app-frozen-header{ background:var(--surface); box-shadow:none; border-bottom:1px solid var(--border); }
+/* (no blur here: the menu down the left sits inside this bar, and a blur would pin it to the bar) */
+.topbar{ padding:8px 20px; gap:10px; border-bottom:0; background:transparent; min-height:56px; }
+.brand h1{ font-size:15.5px; font-weight:650; }
+.brand .sub{ font-size:12px; }
+.brand-mark{ border-radius:8px; box-shadow:0 0 0 1px var(--border); }
+.brand-pencil{ height:44px; opacity:.8; }
+.version-badge{ border-radius:999px; padding:0 8px; font-size:11px; background:var(--surface-2); border-color:var(--border); }
+.status-pill{ border-radius:999px; background:var(--surface-2); border:1px solid var(--border); font-size:12px; padding:3px 10px; }
+
+/* ---------- 5. menu down the left, with an icon for each screen ---------- */
+.tabs{ background:var(--surface); border-right:1px solid var(--border); padding:12px 10px; gap:2px; }
+.tab-btn{ position:relative; white-space:nowrap; min-height:38px; padding:0 10px 0 38px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:500;
+  color:var(--ink-muted); transition:background-color .15s, color .15s; }
+.tab-btn::before{ content:""; position:absolute; left:11px; top:50%; width:18px; height:18px; margin-top:-9px; background:currentColor;
+  -webkit-mask:var(--tab-ico) center/contain no-repeat; mask:var(--tab-ico) center/contain no-repeat; opacity:.85; }
+.tab-btn:hover{ background:var(--surface-2); color:var(--ink); }
+.tab-btn.active{ background:var(--accent-soft); color:var(--accent-strong); font-weight:650; }
+.tab-btn.active::after{ content:""; position:absolute; left:-10px; top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; background:var(--accent); }
+.tab-btn .count{ font-size:11.5px; font-weight:600; color:var(--ink-faint); background:var(--surface-2); border-radius:999px; padding:0 7px; line-height:19px; min-width:20px; text-align:center; }
+.tab-btn.active .count{ background:color-mix(in srgb, var(--accent) 14%, transparent); color:var(--accent-strong); }
+.tab-btn[data-tab="orders"]{ --tab-ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='8' y='2' width='8' height='4' rx='1'/><path d='M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2'/><path d='M12 11h4M12 16h4M8 11h.01M8 16h.01'/></svg>"); }
+.tab-btn[data-tab="ordering"]{ --tab-ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2'/><path d='M15 18H9'/><path d='M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14'/><circle cx='17' cy='18' r='2'/><circle cx='7' cy='18' r='2'/></svg>"); }
+.tab-btn[data-tab="suppliers"]{ --tab-ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7'/><path d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/><path d='M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4'/><path d='M2 7h20'/><path d='M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7'/></svg>"); }
+.tab-btn[data-tab="menuitem"]{ --tab-ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M2 12h20'/><path d='M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8'/><path d='m4 8 16-4'/><path d='m8.86 6.78-.45-1.81a2 2 0 0 1 1.45-2.43l1.94-.48a2 2 0 0 1 2.43 1.46l.45 1.8'/></svg>"); }
+.tab-btn[data-tab="recipes"]{ --tab-ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2'/><path d='M7 2v20'/><path d='M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7'/></svg>"); }
+.tab-btn[data-tab="costing"]{ --tab-ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 3v18h18'/><path d='M7 16v-4M12 16V8M17 16v-7'/></svg>"); }
+.tab-btn:not([data-tab="orders"]):not([data-tab="ordering"]):not([data-tab="suppliers"]):not([data-tab="menuitem"]):not([data-tab="recipes"]):not([data-tab="costing"]){ padding-left:12px; }
+.tab-btn:not([data-tab="orders"]):not([data-tab="ordering"]):not([data-tab="suppliers"]):not([data-tab="menuitem"]):not([data-tab="recipes"]):not([data-tab="costing"])::before{ display:none; }
+@media (max-width:900px){ .tab-btn.active::after{ display:none; } .tabs{ padding:8px 12px; } }
+
+main{ padding:20px 24px 32px; }
+
+/* ---------- 6. buttons and fields ---------- */
+.btn{ height:34px; padding:0 14px; border-radius:var(--radius-sm); font-weight:500; font-size:13.5px; box-shadow:0 1px 1px rgba(0,0,0,.03);
+  transition:background-color .15s, border-color .15s, color .15s, box-shadow .15s; }
+.btn:not(.primary):not(.ghost):not(.danger), .btn{ background:var(--surface); border-color:var(--border); color:var(--ink); }
+.btn:not(.primary):not(.ghost):not(.danger):hover, .btn:hover{ background:var(--surface-2); border-color:color-mix(in srgb, var(--ink) 22%, var(--border)); color:var(--ink); }
+.btn:not(.primary):not(.ghost):not(.danger) svg{ color:var(--ink-muted); }
+.btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600; box-shadow:0 1px 2px color-mix(in srgb, var(--accent) 35%, transparent); }
+.btn.primary:hover{ background:var(--accent-strong); border-color:var(--accent-strong); color:var(--on-accent); }
+.btn.ghost{ background:transparent; border-color:transparent; box-shadow:none; color:var(--ink-muted); }
+.btn.ghost:hover{ background:var(--surface-3); border-color:transparent; color:var(--ink); }
+.btn.danger{ background:var(--surface); color:var(--bad); border-color:color-mix(in srgb, var(--bad) 45%, var(--border)); }
+.btn.danger:hover{ background:var(--bad); border-color:var(--bad); color:var(--surface); }
+.btn.small{ height:26px; padding:0 9px; font-size:12.5px; border-radius:6px; }
+.btn:focus-visible{ box-shadow:var(--focus); }
+.icon-btn{ border-radius:6px; color:var(--ink-faint); }
+.icon-btn:hover{ background:var(--surface-3); color:var(--ink); }
+.icon-btn[data-action="delete-item"]:hover, .icon-btn[title^="Delete"]:hover, .icon-btn[title^="Remove"]:hover{ background:var(--bad-soft); color:var(--bad); }
+
+input[type="text"], input[type="number"], input[type="search"], input[type="email"], input[type="password"], input[type="date"], select, textarea{
+  border-radius:var(--radius-sm); color:var(--ink); }
+.modal .field input, .modal .field select, .field input[type=number], .field input[type=text], textarea{
+  border:1px solid var(--border); background:var(--surface); }
+.modal .field input:focus, .modal .field select:focus, .field input:focus, textarea:focus, select:focus{ border-color:var(--accent); box-shadow:var(--focus); outline:none; }
+select.filter{ height:34px; }
+select.filter, .search-box{ border-radius:var(--radius-sm); border-color:var(--border); }
+.search-box:focus-within, select.filter:focus{ border-color:var(--accent); box-shadow:var(--focus); }
+.field label{ font-size:12px; font-weight:600; color:var(--ink-muted); }
+.hint{ color:var(--ink-muted); }
+.toolbar{ gap:8px; margin-bottom:16px; }
+
+/* ---------- 7. the boxes at the top of a screen ---------- */
+.summary-strip{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:14px; margin-bottom:18px; }
+@media (max-width:1180px){ .summary-strip{ grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+@media (max-width:520px){ .summary-strip{ grid-template-columns:1fr; } }
+.summary-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 16px; min-width:0; }
+.summary-card .label{ font-size:12.5px; font-weight:500; color:var(--ink-muted); margin-bottom:2px; }
+.summary-card .value{ font-size:26px; font-weight:650; letter-spacing:-.02em; color:var(--ink); font-variant-numeric:tabular-nums; }
+.summary-card .value .value-note{ font-size:12.5px; letter-spacing:0; }
+.summary-strip .summary-card:last-child{ background:var(--accent-soft); border-color:var(--accent-line); }
+.summary-strip .summary-card:last-child .value{ color:var(--accent-strong); }
+.summary-card select.missing-price-jump{ width:100%; margin-top:8px; height:30px; border:1px solid var(--border); background:var(--surface); }
+
+/* ---------- 8. tables ---------- */
+.sheet-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+table.ledger thead th{ position:sticky; top:0; z-index:2; background:var(--surface-2); color:var(--ink-muted); font-size:12px; font-weight:600;
+  padding:10px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+table.ledger td{ padding:7px 10px; border-bottom:1px solid var(--border-soft); }
+table.ledger tbody tr{ transition:background-color .2s; }
+table.ledger tbody tr:hover{ background:color-mix(in srgb, var(--accent) 4%, var(--surface)); }
+table.ledger tbody tr.jump-highlight{ background:var(--accent-soft); }
+table.ledger tbody tr.pending-order td{ background:var(--pending-bg); }
+table.ledger tbody tr.pending-order:hover td{ background:var(--pending-bg-hover); }
+tr.supplier-row td{ background:var(--group-bg); color:var(--group-ink); border-top:1px solid var(--group-line); border-bottom:1px solid var(--group-line);
+  font-family:var(--font-body); font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:9px 12px; }
+tr.category-row td{ background:var(--surface-2); color:var(--ink-muted); font-size:12px; font-weight:600; padding:6px 12px 6px 22px; }
+.cell-input{ border-radius:6px; color:var(--ink); }
+.cell-input:hover{ border-color:var(--border); background:var(--surface); }
+.cell-input:focus{ border-color:var(--accent); box-shadow:var(--focus); background:var(--surface); }
+.num, td.num, table.ledger .num{ font-variant-numeric:tabular-nums; }
+
+/* the Order Sheet: same columns as 1.0.7 (it still scrolls sideways on a small screen), but the
+   code and the price are no longer cut off */
+#orders-table-wrap .item-name-cell{ min-width:300px; }
+#view-orders table.ledger td.item-name-cell .cell-input{ width:100%; font-weight:500; }
+#view-orders table.ledger td:nth-child(2) .cell-input{ width:68px; font-family:var(--font-mono); font-size:12.5px; }
+#view-orders table.ledger td:nth-child(5) .cell-input{ width:66px; }
+#view-orders table.ledger td:nth-child(6){ white-space:nowrap; }
+#view-orders table.ledger th:nth-child(n+8), #view-orders table.ledger td:nth-child(n+8){ text-align:center; }
+#view-orders table.ledger td:nth-child(11){ text-align:right; }
+tr:focus-within .row-actions{ opacity:1; }
+@media (hover:none){ .row-actions{ opacity:1; } }
+
+/* "Priced by": a neat 2 x 2 switch */
+.unit-toggle{ background:var(--surface-3); border-radius:7px; padding:2px; gap:2px; }
+.unit-toggle button{ font-size:11px; font-weight:600; color:var(--ink-muted); border-radius:5px; padding:2px 7px; }
+.unit-toggle button:hover{ color:var(--ink); }
+.unit-toggle button.active{ background:var(--surface); color:var(--accent-strong); box-shadow:0 1px 2px rgba(0,0,0,.12); }
+.os-unit-toggle.kind-size button.active{ background:var(--surface); color:var(--kind-size); box-shadow:0 1px 2px rgba(0,0,0,.12), inset 0 -2px 0 var(--kind-size); }
+.os-unit-toggle.kind-each button.active{ background:var(--surface); color:var(--kind-each); box-shadow:0 1px 2px rgba(0,0,0,.12), inset 0 -2px 0 var(--kind-each); }
+
+/* "Cost": the kind label and the price on one line, the sum underneath */
+td.cost-readout{ white-space:nowrap; font-variant-numeric:tabular-nums; }
+.cost-readout .size-kind-badge{ display:table; margin:0 0 2px auto; font-size:9.5px; padding:1px 6px; border-radius:4px; }
+.formula-note{ font-size:10.5px; color:var(--ink-muted); margin-top:1px; }
+
+/* ---------- 9. Ordering ---------- */
+.ordering-subtabs{ gap:6px; }
+.ordering-subtab{ border-radius:999px; background:var(--surface); border:1px solid var(--border); color:var(--ink-muted); font-weight:500; font-size:12.5px; padding:5px 12px; }
+.ordering-subtab:hover{ border-color:var(--accent); color:var(--ink); }
+.ordering-subtab.active{ background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600; }
+.ordering-subtab.pending-order:not(.active){ background:var(--pending-bg); border-color:var(--pending-border); color:var(--pending-text); }
+#view-ordering pre, #view-ordering textarea{ background:var(--surface-2); border:1px solid var(--border-soft); border-radius:var(--radius-sm); }
+
+/* ---------- 10. recipes ---------- */
+.recipe-list, .recipe-editor{ border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+.recipe-list-head{ padding:14px 14px 10px; border-bottom:1px solid var(--border-soft); }
+.recipe-card{ border-left:3px solid transparent; padding:10px 14px; border-bottom:1px solid var(--border-soft); transition:background-color .15s; }
+.recipe-card:hover{ background:var(--surface-2); }
+.recipe-card.active{ background:var(--accent-soft); border-left-color:var(--accent); }
+.recipe-card .rname{ font-size:13.5px; font-weight:600; }
+.recipe-card .rcost{ font-variant-numeric:tabular-nums; }
+.recipe-card .rname-collision{ color:var(--warn); }
+.recipe-card .rname-drift{ color:var(--info); }
+.recipe-editor{ padding:22px 24px; }
+.recipe-editor-head h2{ font-size:22px; }
+.recipe-search-input{ height:34px; border-radius:var(--radius-sm); }
+.rs-opt mark{ background:color-mix(in srgb, var(--warn) 25%, transparent); }
+
+/* ---------- 11. Costing ---------- */
+.costing-tile{ border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+.costing-tile:hover{ border-color:color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.costing-tile.on{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), var(--shadow); }
+.costing-tile-value{ letter-spacing:-.02em; }
+.costing-card{ border:1px solid var(--border); border-radius:var(--radius); }
+.costing-bar{ border-radius:5px 5px 0 0; background:linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 78%, var(--surface))); }
+.costing-legend-line, .costing-budget-line{ border-top-color:var(--ink-muted); }
+
+/* ---------- 12. pop-ups ---------- */
+.modal-overlay{ background:color-mix(in srgb, #0b0d0c 42%, transparent); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+.modal{ background:var(--surface); color:var(--ink); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow-lg); padding:24px 26px; }
+.modal h2{ font-size:18px; margin-bottom:12px; }
+.modal-actions{ gap:8px; margin-top:20px; padding-top:16px; border-top:1px solid var(--border-soft); }
+.modal.settings-modal{ padding:0; }
+.modal.settings-modal .modal-actions{ border-top:0; padding-top:0; }
+
+/* the weekly backup reminder: a small card, bottom right */
+.weekly-backup-banner{ border-radius:12px; border:1px solid color-mix(in srgb, var(--warn) 40%, var(--border)); background:var(--surface); box-shadow:var(--shadow-lg); }
+.weekly-backup-banner h2{ font-size:14.5px; color:var(--warn); }
+.weekly-backup-banner .modal-actions{ border-top:0; padding-top:0; margin-top:0; }
+
+/* messages at the bottom of the window */
+.toast{ border-radius:10px; box-shadow:var(--shadow-lg); font-size:13px; }
+
+/* ---------- 13. scroll bars (Mac and Windows look the same) ---------- */
+::-webkit-scrollbar{ width:11px; height:11px; }
+::-webkit-scrollbar-thumb{ background:color-mix(in srgb, var(--ink) 18%, transparent); border-radius:999px; border:3px solid transparent; background-clip:content-box; }
+::-webkit-scrollbar-thumb:hover{ background-color:color-mix(in srgb, var(--ink) 32%, transparent); }
+::-webkit-scrollbar-track{ background:transparent; }
+
+@media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+<style id="v2-layout">
+/* ============================================================
+   2.0.0 — LAYOUT (on top of v2-look). Each part says what it is for.
+   ============================================================ */
+
+/* ---- Order Sheet ---- */
+/* "Priced by" drop-down: coloured by kind, like the old buttons */
+select.os-unit-select{ height:28px; padding:0 24px 0 9px; font-size:12.5px; font-weight:600; border:1px solid var(--border);
+  border-radius:6px; background-color:var(--surface); color:var(--ink); cursor:pointer; -webkit-appearance:none; appearance:none;
+  background-image:linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:calc(100% - 12px) 12px, calc(100% - 8px) 12px; background-size:4px 4px; background-repeat:no-repeat; }
+select.os-unit-select.kind-size{ color:var(--kind-size); background-color:var(--kind-size-soft); border-color:color-mix(in srgb, var(--kind-size) 30%, transparent); }
+select.os-unit-select.kind-each{ color:var(--kind-each); background-color:var(--kind-each-soft); border-color:color-mix(in srgb, var(--kind-each) 30%, transparent); }
+select.os-unit-select:focus{ outline:none; box-shadow:var(--focus); }
+select.os-unit-select option{ color:var(--ink); background:var(--surface); }
+/* the Weight/Each label in Cost now repeats the drop-down: hidden there (still in the page) */
+#view-orders td.cost-readout .size-kind-badge{ display:none; }
+#view-orders td.cost-readout{ line-height:1.25; }
+/* columns: fit a 1440-wide window without scrolling sideways */
+#orders-table-wrap .item-name-cell{ min-width:240px; }
+#view-orders td.cost-readout{ min-width:0 !important; }
+#view-orders table.ledger th:last-child, #view-orders table.ledger td:last-child{ width:58px; padding-left:2px; padding-right:4px; }
+#view-orders table.ledger{ min-width:980px; }
+#view-orders table.ledger td{ padding-top:6px; padding-bottom:6px; }
+#view-orders table.ledger td:nth-child(2) .cell-input{ width:62px; }
+#view-orders table.ledger td:nth-child(3) .cell-input{ width:84px; font-size:12.5px; }
+#view-orders table.ledger td:nth-child(10){ width:52px !important; }
+#view-orders table.ledger td:nth-child(10) .cell-input{ width:46px; }
+#view-orders table.ledger th:nth-child(8), #view-orders table.ledger th:nth-child(9){ padding-left:4px; padding-right:4px; }
+/* supplier headings stay pinned under the column headings while you scroll that supplier */
+#orders-table-wrap tr.supplier-row td{ position:sticky; top:calc(var(--v2-thead-h, 50px) - 1px); z-index:1; box-shadow:0 -10px 0 var(--surface-2); } /* just under the headings (height measured by v2-layout-script) */
+#orders-table-wrap thead th{ z-index:3; }
+
+/* ---- toolbars: "More" menus (see v2-layout-script) ---- */
+.toolbar{ align-items:center; }
+.toolbar > .hint{ flex:1 1 320px; font-size:12.5px; color:var(--ink-muted); padding:0 !important; }
+.v2-more{ position:relative; display:inline-flex; }
+#view-orders .toolbar .v2-more{ margin-left:auto; }
+#view-ordering .toolbar .v2-more, #view-menuitem .toolbar .v2-more, #view-recipes .toolbar .v2-more{ margin-left:auto; }
+.v2-more-btn svg{ color:var(--ink-muted); }
+.v2-more.open .v2-more-btn{ background:var(--surface-2); border-color:color-mix(in srgb, var(--ink) 22%, var(--border)); }
+.v2-more-menu{ position:absolute; right:0; top:calc(100% + 6px); z-index:60; min-width:240px; padding:5px; background:var(--surface);
+  border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow-lg); display:flex; flex-direction:column; gap:2px; }
+.v2-more-menu[hidden]{ display:none; }
+.v2-more-menu > .btn, .v2-more-menu > button{ width:100%; justify-content:flex-start; text-align:left; height:34px; border:0 !important;
+  box-shadow:none !important; background:transparent; color:var(--ink) !important; border-radius:6px; margin:0 !important; font-weight:500; white-space:nowrap; }
+.v2-more-menu > .btn:hover, .v2-more-menu > button:hover, .v2-more-menu > button:focus-visible{ background:var(--surface-2) !important; }
+.v2-more-menu > .btn svg{ color:var(--ink-muted) !important; }
+
+
+/* ---- Ordering: past orders as a table ---- */
+.order-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; margin-bottom:14px; }
+.order-card-head{ display:flex; align-items:baseline; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border-soft); background:var(--surface-2); }
+.order-card-head .order-date{ font-weight:650; }
+.order-card-head .order-supplier{ color:var(--ink-muted); font-size:12px; }
+.order-card-head .order-total{ margin-left:auto; font-weight:700; font-variant-numeric:tabular-nums; }
+.order-card-body{ padding:12px 16px 14px; }
+table.order-items-table{ width:100%; max-width:820px; border-collapse:collapse; font-size:13px; }
+table.order-items-table th{ text-align:left; font-size:11.5px; font-weight:600; color:var(--ink-muted); padding:6px 8px; border-bottom:1px solid var(--border); }
+table.order-items-table td{ padding:6px 8px; border-bottom:1px solid var(--border-soft); }
+table.order-items-table .num{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+table.order-items-table tr.pv td:first-child{ color:var(--ink-muted); }
+table.order-items-table tfoot td{ font-weight:700; border-bottom:0; padding-top:9px; }
+.order-text-fold{ margin-top:10px; }
+.order-text-fold > summary{ cursor:pointer; font-size:12.5px; color:var(--ink-muted); width:max-content; padding:2px 0; }
+.order-text-fold > summary:hover{ color:var(--ink); }
+.order-text-fold .order-copy-box{ margin-top:8px; }
+.order-card-actions{ margin-top:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+
+/* ---- recipe editor: totals beside the ingredients when the editor is wide enough, else a strip under them ---- */
+.recipe-editor{ container-type:inline-size; container-name:recipe-editor; }
+.re-cols{ display:flex; flex-direction:column; gap:16px; }
+.re-main{ min-width:0; }
+.re-main .notes-input{ min-height:64px; }
+.re-side{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:12px 16px; background:var(--surface-2); border:1px solid var(--border-soft);
+  border-radius:var(--radius); padding:14px; }
+.re-side > .section-label{ flex-basis:100%; margin:0; }
+.re-side .results-band{ margin:0; display:flex; flex-wrap:wrap; gap:8px 22px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:12px 14px; }
+.re-side .results-band .rv.big{ font-size:24px; }
+.re-side .yield-config{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:10px 16px; }
+.re-side > .costing-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); flex:1 1 460px; gap:10px; margin:0; }
+.re-side > .costing-grid .field input{ width:100%; }
+.re-side > .results-band:not(#menuitem-results-band){ flex-basis:100%; }
+@container recipe-editor (min-width:1120px){
+  .re-cols{ display:grid; grid-template-columns:minmax(0, 1fr) 300px; gap:22px; align-items:start; }
+  .re-side{ flex-direction:column; flex-wrap:nowrap; align-items:stretch; position:sticky; top:calc(var(--kl-head-h, 64px) + 12px); }
+  .re-side .results-band{ flex-direction:column; }
+  .re-side .yield-config{ flex-direction:column; align-items:stretch; }
+  .re-side .costing-grid, .re-side > .costing-grid{ grid-template-columns:1fr 1fr; flex:none; }
+  /* 2.0.5 — the batch yield boxes fit the side panel: one under another, each box and its g/kg buttons on one line */
+  .re-side .yield-config > *{ min-width:0; max-width:100%; }
+  .re-side .yield-config .mode-toggle{ flex-wrap:wrap; width:auto; }
+  .re-side .yield-config .mode-toggle button{ flex:1 1 45%; }
+  .re-side .yield-config .costing-grid{ grid-template-columns:minmax(0, 1fr); margin:0; }
+  .re-side .yield-config .field{ min-width:0; }
+  .re-side .yield-config .field-with-unit{ min-width:0; }
+  .re-side .yield-config .field-with-unit input{ width:auto; flex:1 1 auto; min-width:0; }
+  .re-side .yield-config .field-with-unit .unit-toggle{ flex:none; }
+  .re-side .yield-result-band{ min-width:0; overflow-wrap:anywhere; }
+  .re-side .yield-result-band .band-note{ white-space:normal; }
+}
+
+/* ---- 2.0.1: past orders fold ---- */
+details.order-card > summary.order-card-head{ list-style:none; cursor:pointer; user-select:none; }
+details.order-card > summary.order-card-head::-webkit-details-marker{ display:none; }
+details.order-card > summary.order-card-head::before{ content:""; width:8px; height:8px; flex:none; align-self:center; margin-right:2px;
+  border-right:2px solid var(--ink-faint); border-bottom:2px solid var(--ink-faint); transform:rotate(-45deg); transition:transform .15s; }
+details.order-card[open] > summary.order-card-head::before{ transform:rotate(45deg); }
+details.order-card:not([open]) > summary.order-card-head{ border-bottom:0; background:var(--surface); }
+details.order-card > summary.order-card-head:hover{ background:var(--surface-2); }
+details.order-card{ margin-bottom:8px; }
+details.order-card > summary.order-card-head:focus-visible{ outline:none; box-shadow:inset 0 0 0 2px var(--accent); }
+details.order-card[open]{ margin-bottom:14px; }
+.order-card-head .order-count{ color:var(--ink-faint); font-size:12px; margin-left:auto; }
+.order-card-head .order-count + .order-total{ margin-left:16px; min-width:84px; text-align:right; }
+.ordering-start-hint{ margin:2px 0 16px; }
+
+/* ---- 2.0.1: Suppliers table fits; Order Sheet summary boxes slimmer ---- */
+#suppliers-table-wrap table.ledger{ min-width:0; }
+#suppliers-table-wrap td input.cell-input, #suppliers-table-wrap td select{ max-width:100%; }
+#view-orders .summary-strip{ gap:10px; margin-bottom:14px; }
+#view-orders .summary-card{ padding:10px 14px; display:flex; flex-direction:column; justify-content:center; }
+#view-orders .summary-card .label{ font-size:12px; margin-bottom:0; }
+#view-orders .summary-card .value{ font-size:21px; line-height:1.25; }
+#view-orders .summary-card select.missing-price-jump{ margin-top:6px; height:28px; font-size:12.5px; }
+
+/* ---- 2.0.2: the order being built ---- */
+.order-gen-card{ background:var(--surface); border:1px solid var(--accent-line); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px 18px; margin:4px 0 22px; }
+.order-gen-head{ display:flex; align-items:flex-start; gap:16px; margin-bottom:10px; }
+.order-gen-head h3{ font-size:17px; margin:0 0 3px; }
+.order-gen-sub{ font-size:12.5px; color:var(--ink-muted); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.order-gen-card .order-gen-total{ margin-left:auto; text-align:right; font-size:12px; color:var(--ink-muted); display:flex; flex-direction:column; }
+.order-gen-card .order-gen-total strong{ font-size:24px; color:var(--accent-strong); font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.order-gen-items > summary{ cursor:pointer; font-size:12.5px; font-weight:600; color:var(--ink-muted); padding:4px 0; width:max-content; }
+.order-gen-items table.order-items-table{ margin:6px 0 4px; }
+.order-gen-items tr.no-qty td{ color:var(--warn); }
+.og-noqty{ font-size:11.5px; font-weight:600; color:var(--warn); background:var(--warn-soft); border-radius:4px; padding:1px 6px; }
+.og-tag{ font-size:10.5px; font-weight:600; color:var(--ink-muted); background:var(--surface-3); border-radius:4px; padding:1px 6px; margin-left:4px; }
+.order-gen-card .order-gen-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border-soft); }
+.order-gen-card .order-gen-row #btn-clear-ticks{ margin-left:auto; }
+.order-gen-hint{ font-size:12px; margin-top:8px; }
+/* a supplier with an order waiting keeps a red dot, even when it's the one picked */
+.ordering-subtab.pending-order::before{ content:""; display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--bad); margin-right:6px; vertical-align:1px; }
+.ordering-subtab.pending-order.active::before{ background:#fff; box-shadow:0 0 0 2px var(--bad); }
+/* Add item: two columns, so the pop-up is half as tall */
+#modal-add-item .modal{ max-width:620px; width:100%; display:grid; grid-template-columns:1fr 1fr; column-gap:14px; }
+#modal-add-item .modal > *{ grid-column:1 / -1; }
+#modal-add-item .modal > .field{ grid-column:auto; }
+#modal-add-item .modal > .field:first-of-type{ grid-column:1 / -1; }
+@media (max-width:560px){ #modal-add-item .modal{ grid-template-columns:1fr; } }
+
+/* ---- 2.0.3 ---- */
+/* "Ticked only" switch */
+.btn.v2-chip{ border-radius:999px; height:34px; padding:0 14px 0 30px; position:relative; }
+.btn.v2-chip::before{ content:""; position:absolute; left:11px; top:50%; width:12px; height:12px; margin-top:-6px; border-radius:4px; border:1.5px solid var(--ink-faint); background:var(--surface); }
+#orders-ticked-only.on, #orders-ticked-only.on:hover{ background:var(--accent-soft); border-color:var(--accent-line); color:var(--accent-strong); font-weight:600; }
+@media (max-width:1180px){ #view-orders table.ledger{ min-width:1150px; } } /* on a narrow screen the table scrolls sideways rather than squeezing the boxes */
+.btn.v2-chip.on::before{ background:var(--accent); border-color:var(--accent);
+  -webkit-mask:none; box-shadow:inset 0 0 0 2px var(--accent-soft); }
+/* empty recipe screen */
+.v2-empty{ padding:56px 20px; }
+.v2-empty-ico{ width:56px; height:56px; margin:0 auto 14px; border-radius:16px; background:var(--accent-soft); position:relative; }
+.v2-empty-ico::after{ content:""; position:absolute; inset:14px; background:var(--accent);
+  -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2'/><path d='M7 2v20'/><path d='M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7'/></svg>") center/contain no-repeat;
+  mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2'/><path d='M7 2v20'/><path d='M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7'/></svg>") center/contain no-repeat; }
+kbd{ font-family:var(--font-mono); font-size:11.5px; padding:1px 6px; border:1px solid var(--border); border-bottom-width:2px; border-radius:5px; background:var(--surface); color:var(--ink); }
+/* Ledger check drawer: tidier sections (its own styles are added later by the page, so these use the panel's id) */
+html body #health-panel{ background:var(--bg); border-left:1px solid var(--border); box-shadow:var(--shadow-lg); padding:18px; }
+#health-panel .health-head{ font-size:17px; font-weight:650; margin-bottom:8px; }
+#health-panel .health-group{ background:var(--surface); border-color:var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+#health-panel .health-group > summary{ padding:11px 14px; font-size:13.5px; }
+#health-panel .health-group summary .n{ display:inline-block; min-width:20px; text-align:center; background:var(--warn-soft); color:var(--warn); border-radius:999px; padding:0 7px; font-size:12px; font-weight:700; }
+#health-panel .health-row, #health-panel .health-issue{ padding:11px 14px; border-top-color:var(--border-soft); }
+#health-panel .health-row .t, #health-panel .health-issue .t{ font-size:13px; }
+#health-panel .health-acts .btn{ height:28px; padding:0 10px; font-size:12px; }
+#health-panel .health-allgood, #health-panel .health-msg{ border-radius:var(--radius-sm); }
+#health-panel .health-msg.bad{ background:var(--bad-soft); color:var(--bad); }
+
+/* ---- 2.0.4: recipe ingredients ---- */
+table.ingredients select.ing-item-unit-select{ display:block; margin-bottom:2px; }
+table.ingredients td.ing-col-unit{ white-space:nowrap; }
+table.ingredients .ing-name-input{ width:100%; min-width:200px; font-weight:500; }
+/* the method box grows with what's written in it (where the browser supports it; otherwise it stays as before) */
+@supports (field-sizing:content){ .recipe-editor .notes-input{ field-sizing:content; min-height:64px; max-height:320px; } }
+/* when the list sits above the recipe (narrow screen), it's a short scrolling box with its New/Search bar
+   kept in view, so the recipe you pick is on screen without scrolling past every other one */
+@media (max-width: 860px){
+  .recipes-layout .recipe-list{ max-height:300px; overflow-y:auto; }
+  .recipes-layout .recipe-list-head{ position:sticky; top:0; z-index:2; background:var(--surface); }
+}
+
+/* ---- 2.0.5: back to Recent orders ---- */
+.ordering-backbar{ flex-basis:100%; margin:0 0 4px; }
+.ordering-backbar .ordering-back{ padding-left:6px; color:var(--accent-strong); font-weight:600; }
+.ordering-backbar .ordering-back:hover{ background:var(--accent-soft); color:var(--accent-strong); }
+/* ---- top bar: one line; Undo and Redo as a pair of icon buttons ---- */
+.topbar{ flex-wrap:nowrap; }
+.topbar > .btn, .topbar > .v2-more, .topbar > .undo-redo-group{ flex:none; }
+.topbar .v2-undo-redo{ gap:0 !important; margin-left:6px; }
+.topbar .v2-undo-redo .btn{ font-size:0; gap:0; width:34px; padding:0; justify-content:center; }
+.topbar .v2-undo-redo .btn svg{ width:16px; height:16px; }
+.topbar .v2-undo-redo .btn:first-child{ border-radius:var(--radius-sm) 0 0 var(--radius-sm); }
+.topbar .v2-undo-redo .btn:last-child{ border-radius:0 var(--radius-sm) var(--radius-sm) 0; margin-left:-1px; }
+.topbar .v2-more-top .v2-more-btn{ width:34px; padding:0; justify-content:center; }
+.topbar #btn-settings{ order:0; }
+@media (max-width:1100px){ .topbar{ flex-wrap:wrap; } .brand-pencil{ display:none; } }
+</style>
 </head>
 <body>
 <div id="test-app-banner" style="display:none;background:#b45309;color:#fff;padding:6px 14px;font-size:13px;font-weight:600;text-align:center"></div>
@@ -1377,6 +1850,7 @@ table.ledger.costing-items{ min-width:0; }
           <input type="text" id="orders-search" placeholder="Search items or codes…">
         </div>
         <select class="filter" id="orders-supplier-filter"><option value="">All suppliers</option></select>
+        <button class="btn v2-chip" id="orders-ticked-only" type="button" aria-pressed="false" title="Show only the items ticked to order">Ticked only</button>
         <button class="btn" id="btn-print-stock-count" type="button" style="margin-left:auto" title="Print a Stock Count &amp; Order sheet (.docx) with Monday to Sunday boxes for the store room">Print stock count…</button>
         <button class="btn primary" id="btn-add-item" type="button">+ Add item</button>
       </div>
@@ -4150,7 +4624,7 @@ async function buildStandaloneRecipeXlsxBuffer(sheetName, fields){
    time that field changes — that's the only place this needs
    updating; both About surfaces pick it up automatically.
    ============================================================ */
-var APP_VERSION = "1.0.7";
+var APP_VERSION = "1.2.0";
 // Shown after the version (e.g. " TRIAL" on trial builds); empty on the real app.
 var APP_VERSION_TAG = "";
 // Build number, per the user: six characters, digit-letter-digit-digit-
@@ -4160,6 +4634,7 @@ var APP_VERSION_TAG = "";
 // starts again at A1 (5.7.9 -> 5G09A1, 5.8.0 -> 5H00A1).
 var APP_BUILD = ""; // from V6.0.1, per the user: no build numbers, each new build is the next patch version
 var CHANGELOG = [ // 1.0.0 — per Simon: the history starts again here, newest first
+  { version: "1.2.0", note: "New look. Cleaner colours, a menu with icons, and a proper dark mode. Order Sheet: a one-line Priced by choice, shorter rows that fit the screen, supplier names that stay at the top as you scroll, and a Ticked only switch. Ordering: the order you are building is listed with its total, past orders fold up, a Recent orders page with a way back to it, and a red dot on suppliers with an order waiting. Recipes: Priced by as a drop-down, totals beside the ingredients on a wide screen, and a Method box that grows. Less-used buttons are under More. Costing opens on a period that has orders. Press / to search. Fixed: a failed sign-in to the online copy now shows the reason. Nothing you have saved changes." },
   { version: "1.0.7", note: "Fixed: the ledger check now reads sub-headings that were recoloured in Excel (for example grey instead of blue), so items no longer show as being under a different sub-heading. “Keep the app\u2019s sub-heading” no longer adds rows to the ledger when it can\u2019t read a sub-heading, and says plainly if an item couldn\u2019t be moved. New in the ledger check: repeated sub-headings with nothing under them can be tidied back to blank spare rows (a copy of the ledger is saved first)." },
   { version: "1.0.6", note: "New: Updates without a new installer. When a newer version is ready, a box at the top right says so: press Update now and the app saves, then restarts on it. Every update is checked before it is used, and Help \u203a Go back to the built-in version undoes one. New: Online copy. Sign in with \u2601 Online copy (next to the status at the top) and this computer shares its items, suppliers, recipes and saved orders with the iPads, iPhones and web app, about every 30 seconds. The ledger on the network drive works as before. A full backup (.json) now brings in suppliers\u2019 details (address, email, phone, account number, ordering method and notes) and saved orders too, not just items and recipes. Links in the app only ever open web pages, email or phone numbers." },
   { version: "1.0.5", note: "New: Your files. When the ledger, Master Order File or Menu Backup isn\u2019t linked, or can\u2019t be found, the app says so when it opens and helps put it right: it makes the file next to the ledger and links it, or helps you find it, or shows how to make it yourself. The Menu Backup can wait (Not now asks again in a week). Where files are has a Set up button for the same thing. A new business can keep its files on just this computer, in Documents. Recipe search: the drop-down now lists every match, not just the first 8, and the arrow keys go through them all. One Import button: pick any file and the app works out what it is (a backup, a ledger, a price list, a supplier\u2019s own file, suppliers, order history or Menu Backup recipes). It only asks when it can\u2019t be sure, and then only between the two likeliest kinds. Supplier file layouts a business starts with now come from its own settings, not the app." },
@@ -6880,6 +7355,7 @@ var COSTING_PERIODS = [
   { key: "quarter", label: "Last quarter", days: 91 }
 ];
 var costingPeriod = "week";
+var costingPeriodChosen = false; // 2.0.3 — until a tile is clicked, open on the shortest period that has orders
 function orderSpend(o){
   if(o && typeof o.total === "number" && isFinite(o.total)) return o.total;
   return ((o && o.items) || []).reduce(function(s, i){ var v = Number(i.lineTotal); return i.priceVaries || !isFinite(v) ? s : s + v; }, 0);
@@ -6922,6 +7398,10 @@ function costingSummary(now){
 }
 function renderCosting(){
   var root = document.getElementById("costing-root"); if(!root) return;
+  if(!costingPeriodChosen){ // 2.0.3
+    var withOrders = COSTING_PERIODS.filter(function(p){ return p.key !== "day" && ordersWithin(p.days, Date.now()).length; })[0];
+    costingPeriod = withOrders ? withOrders.key : "week";
+  }
   var s = costingSummary(), b = state.meta.budget || {}, gbp = function(n){ return "£" + Math.round(n).toLocaleString("en-GB"); };
   var h = '<div class="costing-head"><h2>Costing</h2><span class="costing-note">Worked out from the orders saved in Ordering, on the day each was saved. “Price varies” items aren’t counted.</span></div>';
   // the five totals
@@ -6977,7 +7457,7 @@ function renderCosting(){
   }
   h += '</section>';
   root.innerHTML = h;
-  root.querySelectorAll("[data-costing-period]").forEach(function(btn){ btn.addEventListener("click", function(){ costingPeriod = btn.getAttribute("data-costing-period"); renderCosting(); }); });
+  root.querySelectorAll("[data-costing-period]").forEach(function(btn){ btn.addEventListener("click", function(){ costingPeriod = btn.getAttribute("data-costing-period"); costingPeriodChosen = true; renderCosting(); }); });
   var on = document.getElementById("costing-budget-on");
   if(on) on.addEventListener("change", function(){ state.meta.budget = Object.assign({}, state.meta.budget || {}, { on: on.checked }); persist(); renderCosting(); });
   var wk = document.getElementById("costing-budget-weekly");
@@ -7251,6 +7731,7 @@ function renderOrdersSummary(){
 // very next thing typed lands straight in the box that needs it.
 function jumpToSupplierMissingPrice(supplierName){
   if(!supplierName) return;
+  setOrdersTickedOnly(false); // 2.0.3 — the item it jumps to may not be ticked
   ordersSupplierFilter = supplierName;
   var filterSel = document.getElementById("orders-supplier-filter");
   if(filterSel) filterSel.value = supplierName;
@@ -7305,16 +7786,34 @@ function renderOrderGenerationPanel(){
   var canEmail = !!(rec && rec.email && method === "email");
   var locked = isTabLocked("ordering");
 
+  // 2.0.2 — a card for the order being built: what's in it (the same ticked items the running total counts), then the buttons
+  var orderItems = state.items.filter(function(item){ return item.orderChecked && ((item.supplier||"Unassigned").trim().toLowerCase()) === selectedOrderSupplier.trim().toLowerCase(); });
+  var itemRows = orderItems.map(function(item){
+    var qty = num(item.orderQty, 0);
+    var warnQty = !(qty > 0) && !item.priceVaries; // a price-varies item with no quantity is normal (same rule as zeroQtyOrderItems)
+    return '<tr'+(warnQty ? ' class="no-qty"' : '')+'><td>'+esc(item.name||"")+(item.priceVaries ? ' <span class="og-tag">price varies</span>' : '')+'</td>' +
+      '<td class="num">'+(qty > 0 ? esc(String(item.orderQty)) : warnQty ? '<span class="og-noqty" title="No quantity set on the Order Sheet">no qty</span>' : '<span class="hint">—</span>')+'</td>' +
+      '<td class="num">'+v2MoneyOrDash(item.price)+'</td><td class="num">'+money(itemOrderLineTotal(item))+'</td></tr>';
+  }).join("");
   panel.innerHTML = warningHtml +
+    '<div class="order-gen-card">' +
+    '<div class="order-gen-head">' +
+      '<div><h3>New order — '+esc(selectedOrderSupplier)+'</h3>' +
+        '<div class="order-gen-sub">'+orderItems.length+' item'+(orderItems.length===1?'':'s')+' ticked on the Order Sheet ' +
+        '<span class="method-badge method-'+(method||"none")+'">'+(method ? esc(method) : "no ordering method set") +'</span></div></div>' +
+      '<div class="order-gen-total">Running total<strong>'+money(supplierOrderTotal(selectedOrderSupplier))+'</strong></div>' +
+    '</div>' +
+    '<details class="order-gen-items" open><summary>Items in this order</summary>' +
+      '<table class="order-items-table"><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit £</th><th class="num">Line £</th></tr></thead><tbody>'+itemRows+'</tbody></table>' +
+    '</details>' +
     '<div class="order-gen-row">' +
-      '<div class="order-gen-total">Running total for '+esc(selectedOrderSupplier)+': <strong>'+money(supplierOrderTotal(selectedOrderSupplier))+'</strong></div>' +
-      '<span class="method-badge method-'+(method||"none")+'">'+(method ? esc(method) : "no ordering method set") +'</span>' +
       '<button class="btn primary" id="btn-generate-one" type="button"'+((missing.length||locked)?" disabled":"")+'>Generate Order Doc</button>' +
       '<button class="btn" id="btn-email-one" type="button" title="'+(canEmail?"Send by email, or open your email app — see Settings":"Only available for suppliers set to order by email, in the desktop app")+'"'+((canEmail && !missing.length && !locked)?"":" disabled")+'>Email to supplier</button>' +
       '<button class="btn" id="btn-generate-all" type="button"'+((missing.length||locked)?" disabled":"")+'>Generate all ('+openNames.length+') as .zip</button>' +
       '<button class="btn ghost" id="btn-clear-ticks" type="button"'+(locked?" disabled":"")+' title="Untick every '+esc(selectedOrderSupplier)+' item on the Order Sheet and clear its quantity — click this once you\'re sure this order has actually gone out, so it can\'t accidentally be sent again next time">Clear ticks — mark as ordered</button>' +
     '</div>' +
-    '<div class="hint" style="padding-top:8px">Generating or emailing saves a dated copy of this order below, ready to search and copy later. \"Clear ticks\" is separate and manual on purpose — it never happens automatically, so nothing gets marked as ordered before you\'re sure it actually went out.</div>';
+    '<div class="hint order-gen-hint">Generating or emailing saves a dated copy of this order below, ready to search and copy later. \"Clear ticks\" is separate and manual on purpose — it never happens automatically, so nothing gets marked as ordered before you\'re sure it actually went out.</div>' +
+    '</div>';
 }
 
 /* ============================================================
@@ -7381,7 +7880,11 @@ function renderOrderingSection(){
   state.items.forEach(function(it){
     if(it.orderChecked) pendingOrderNames[(it.supplier||"Unassigned").trim().toLowerCase()] = true;
   });
-  tabsWrap.innerHTML = names.map(function(n){
+  // 2.0.5 — once a supplier is picked, a way back to the first page (Recent orders, all suppliers)
+  var backBar = selectedOrderSupplier
+    ? '<div class="ordering-backbar"><button type="button" class="btn ghost small ordering-back" data-action="ordering-back">'+(state.orders.length ? '← All recent orders' : '← All suppliers')+'</button></div>'
+    : '';
+  tabsWrap.innerHTML = backBar + names.map(function(n){
     var c = orderHistoryCountFor(n);
     var pending = !!pendingOrderNames[n.trim().toLowerCase()];
     var cls = "ordering-subtab" + (n===selectedOrderSupplier?" active":"") + (pending?" pending-order":"");
@@ -7391,6 +7894,7 @@ function renderOrderingSection(){
   renderOrderGenerationPanel();
   content.innerHTML = selectedOrderSupplier
     ? renderOrderHistoryForSupplier(selectedOrderSupplier)
+    : state.orders.length ? renderRecentOrders() // 2.0.1 — the latest orders instead of an empty page
     : '<div class="empty-state" id="ordering-choose-supplier"><h3>Choose a supplier to start</h3><p>Pick a supplier above to build, send and review its order. Suppliers shaded red have an order ticked and ready to place.</p></div>';
 }
 
@@ -7588,22 +8092,43 @@ function renderOrderHistoryForSupplier(supplierName){
     return head + '<div class="hint" style="padding:0 0 20px">Nothing saved yet for this supplier — generate or email an order above and it\'ll show up here, dated and ready to copy. Already got history in a linked Orders file? Use "Import past orders from Orders file…" above to bring it back in.</div>';
   }
   var locked = isTabLocked("ordering");
-  return head + entries.map(function(o){ return renderOrderCard(o, locked); }).join("");
+  return head + entries.map(function(o, i){ return renderOrderCard(o, locked, i === 0); }).join("");
 }
 
 // Copying an order's text is a pure view/read action, left enabled even
 // while locked; deleting the saved order and reordering its items both
 // change data, so those two are disabled when `locked` is true.
-function renderOrderCard(o, locked){
+// 2.0.0 — the saved order's items as a table (read only; built from the saved record, same figures as its text)
+function renderOrderItemsTable(o){
+  var items = o.items || [];
+  if(!items.length) return '';
+  return '<table class="order-items-table"><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit £</th><th class="num">Line £</th></tr></thead><tbody>' +
+    items.map(function(i){
+      var pv = !!i.priceVaries;
+      return '<tr' + (pv ? ' class="pv"' : '') + '><td>' + esc(i.name || "") + '</td>' +
+        '<td class="num">' + esc(String(i.qty == null ? "" : i.qty)) + '</td>' +
+        '<td class="num">' + (pv ? '<span class="hint">to be set</span>' : v2MoneyOrDash(i.price)) + '</td>' +
+        '<td class="num">' + (pv ? '<span class="hint">—</span>' : v2MoneyOrDash(i.lineTotal)) + '</td></tr>';
+    }).join("") +
+    '</tbody><tfoot><tr><td colspan="3">Total' + (items.some(function(i){ return i.priceVaries; }) ? ' <span class="hint">(price-varies items not counted)</span>' : '') + '</td><td class="num">' + v2MoneyOrDash(o.total) + '</td></tr></tfoot></table>';
+}
+function v2MoneyOrDash(v){ var n = (v === null || v === undefined || v === "") ? NaN : Number(v); return isFinite(n) ? money(n) : '<span class="hint">—</span>'; }
+// 2.0.1 — each order folds: the newest is open, older ones are one line (date, supplier, items, total)
+function renderOrderCard(o, locked, open){
   var d = new Date(o.date);
-  return '<div class="order-card" data-order-id="'+o.id+'">' +
-    '<div class="order-card-head">' +
+  var n = (o.items || []).length;
+  return '<details class="order-card" data-order-id="'+o.id+'"'+(open ? ' open' : '')+'>' +
+    '<summary class="order-card-head">' +
       '<span class="order-date">'+esc(formatOrderDateLong(d))+'</span>' +
       '<span class="order-supplier">'+esc(o.supplier)+'</span>' +
-      '<span class="order-total">'+money(o.total)+'</span>' +
-    '</div>' +
+      '<span class="order-count">'+n+' item'+(n===1?'':'s')+'</span>' +
+      '<span class="order-total">'+v2MoneyOrDash(o.total)+'</span>' +
+    '</summary>' +
     '<div class="order-card-body">' +
-      '<textarea class="order-copy-box" readonly rows="'+Math.min(20, Math.max(8, o.items.length+7))+'">'+esc(o.text)+'</textarea>' +
+      renderOrderItemsTable(o) + // 2.0.0 — a table to read; the email text is kept, folded, below it
+      '<details class="order-text-fold"><summary>Show email text</summary>' +
+        '<textarea class="order-copy-box" readonly rows="'+Math.min(20, Math.max(8, n+7))+'">'+esc(o.text)+'</textarea>' +
+      '</details>' +
       '<div class="order-card-actions">' +
         '<button class="btn primary" type="button" data-action="copy-order">Copy for email</button>' +
         '<label class="reorder-toggle" title="Ticks these exact items and quantities back onto the Order Sheet, ready to review and generate again">' +
@@ -7612,9 +8137,17 @@ function renderOrderCard(o, locked){
         '<button class="btn ghost" type="button" data-action="delete-order"'+(locked?" disabled":"")+'>Delete</button>' +
       '</div>' +
     '</div>' +
-  '</div>';
+  '</details>';
 }
 
+// 2.0.1 — Ordering's first page: the 8 latest saved orders from every supplier, folded
+function renderRecentOrders(){
+  var recent = state.orders.slice().sort(function(a,b){ return new Date(b.date) - new Date(a.date); }).slice(0, 8);
+  var locked = isTabLocked("ordering");
+  return '<div class="ordering-start-hint hint">Pick a supplier above to build, send and review its order. Suppliers shaded red have an order ticked and ready to place.</div>' +
+    '<div class="order-history-head"><h3>Recent orders</h3><span class="hint">latest ' + recent.length + ' of ' + state.orders.length + ', all suppliers</span></div>' +
+    recent.map(function(o){ return renderOrderCard(o, locked, false); }).join("");
+}
 function orderSearchHaystack(o){
   var d = new Date(o.date);
   return [o.supplier||"", formatOrderDateLong(d), d.toLocaleDateString("en-GB"), d.toISOString().slice(0,10)].join(" ").toLowerCase();
@@ -7628,7 +8161,7 @@ function renderOrderingSearchResults(q){
   }
   var locked = isTabLocked("ordering");
   return '<div class="hint" style="padding:0 0 14px">'+matches.length+' matching order'+(matches.length===1?"":"s")+'</div>' +
-    matches.map(function(o){ return renderOrderCard(o, locked); }).join("");
+    matches.map(function(o, i){ return renderOrderCard(o, locked, i === 0 || matches.length <= 3); }).join("");
 }
 
 // v5.5.0 — copies BOTH a real HTML table and the plain-text fallback in
@@ -7673,10 +8206,17 @@ document.getElementById("ordering-search").addEventListener("input", function(e)
 });
 
 document.getElementById("ordering-supplier-tabs").addEventListener("click", function(e){
-  var btn = e.target.closest(".ordering-subtab");
-  if(!btn) return;
-  selectedOrderSupplier = btn.dataset.supplier;
+  // 2.0.5 — "← All recent orders", or clicking the supplier that's already picked, goes back to the first page
+  var wasPicked = selectedOrderSupplier;
+  var goBack = !!e.target.closest('[data-action="ordering-back"]');
+  var btn = goBack ? null : e.target.closest(".ordering-subtab");
+  if(!goBack && !btn) return;
+  selectedOrderSupplier = goBack || btn.dataset.supplier === selectedOrderSupplier ? "" : btn.dataset.supplier;
   renderOrderingSection();
+  if(!selectedOrderSupplier && wasPicked){ // keep the keyboard on the supplier you came from
+    var pills = this.querySelectorAll(".ordering-subtab");
+    for(var i = 0; i < pills.length; i++){ if(pills[i].dataset.supplier === wasPicked){ pills[i].focus(); break; } }
+  }
 });
 
 document.getElementById("ordering-content").addEventListener("click", function(e){
@@ -7689,10 +8229,12 @@ document.getElementById("ordering-content").addEventListener("click", function(e
   if(e.target.closest('[data-action="copy-order"]')){
     var order = state.orders.find(function(o){ return o.id===id; });
     if(order){
-      var html = buildOrderCopyHtml(order.supplier, order.supplierInfo, order.items, new Date(order.date));
-      copyOrderForEmail(order.text, html)
+      // 2.0.1 — an old order without an item list still copies its saved text (plain text only)
+      var html = null; // an old order without an item list copies its saved text only (an empty table would replace it)
+      if(order.items && order.items.length){ try{ html = buildOrderCopyHtml(order.supplier, order.supplierInfo, order.items, new Date(order.date)); }catch(err){ html = null; } }
+      (html ? copyOrderForEmail(order.text || "", html) : copyTextToClipboard(order.text || ""))
         .then(function(){ toast("A005", "Order copied — paste it into your email"); })
-        .catch(function(){ toast("C404", "Couldn't copy automatically — select the text in the box and copy it manually"); });
+        .catch(function(){ var fold = card.querySelector(".order-text-fold"); if(fold) fold.open = true; toast("C404", "Couldn't copy automatically — select the text in the box and copy it manually"); });
     }
     return;
   }
@@ -8097,7 +8639,7 @@ function renderOrders(){
     // V5.7.11 — ignores capitals/spaces, like the rest of the app's supplier
     // matching: items saved as "SAVONA" now show under a "Savona" record.
     var matchesSupplier = !ordersSupplierFilter || (i.supplier||"Unassigned").trim().toLowerCase() === ordersSupplierFilter.trim().toLowerCase();
-    return matchesSearch && matchesSupplier;
+    return matchesSearch && matchesSupplier && (!ordersTickedOnly || i.orderChecked); // 2.0.3 — "Ticked only"
   });
 
   if(state.items.length === 0){
@@ -8105,7 +8647,9 @@ function renderOrders(){
     return;
   }
   if(items.length === 0){
-    wrap.innerHTML = '<div class="empty-state"><h3>No items match</h3><p>Try a different search or clear the supplier filter.</p></div>';
+    wrap.innerHTML = ordersTickedOnly && !state.items.some(function(i){ return i.orderChecked; })
+      ? '<div class="empty-state"><h3>Nothing ticked yet</h3><p>Tick items to order them, or turn off "Ticked only" to see every item.</p></div>'
+      : '<div class="empty-state"><h3>No items match</h3><p>Try a different search, clear the supplier filter, or turn off "Ticked only".</p></div>';
     return;
   }
 
@@ -8119,7 +8663,7 @@ function renderOrders(){
   // dropped from 13 to 12 to match one fewer column.
   var totalCols = 12; // V6.0.3 — Price varies and Order have their own columns again
   var html = '<table class="ledger"><thead><tr>' +
-    '<th style="min-width:220px">Item</th><th>Code</th><th style="min-width:140px">Supplier</th><th>Priced by</th><th style="text-align:right">Price £</th>' +
+    '<th style="min-width:220px">Item</th><th>Code</th><th style="min-width:90px">Supplier</th><th>Priced by</th><th style="text-align:right">Price £</th>' +
     '<th style="text-align:right" class="th-wrap">Pack /<br>Size</th><th style="text-align:right">Cost</th>' +
     // V6.0.3 — per the user: Price varies, Order and Qty side by side again (V6.0.2 stacked them); the heading "Price varies" sits on two lines to keep the column narrow
     '<th style="text-align:center" class="th-wrap" title="Tick when this item\'s actual price varies order to order (e.g. ordered by each, invoiced by weight) — the order sent to the supplier will say “Price to be determined” for it instead of a fixed price">Price<br>varies</th>' +
@@ -8176,16 +8720,17 @@ function renderItemRow(item){
   // the row-actions cell, was removed per the user's request (see the note
   // above groupItems' totalCols for the full reasoning).
   return '<tr data-item-id="'+item.id+'" class="'+(item.priceVaries?"price-varies-row":"")+'">' +
-    '<td class="item-name-cell"><input class="cell-input" data-field="name" value="'+esc(item.name)+'"></td>' +
-    '<td style="width:90px"><input class="cell-input" data-field="productCode" value="'+esc(item.productCode||"")+'"'+(batchRecipeForItem(item) ? ' readonly title="The batch recipe\'s own code"' : '')+'></td>' +
-    '<td style="width:140px"><input class="cell-input" data-field="supplier" list="supplier-list" value="'+esc(item.supplier||"")+'"></td>' +
+    '<td class="item-name-cell"><input class="cell-input" data-field="name" value="'+esc(item.name)+'" title="'+esc(item.name)+'"></td>' +
+    '<td style="width:78px"><input class="cell-input" data-field="productCode" value="'+esc(item.productCode||"")+'"'+(batchRecipeForItem(item) ? ' readonly title="The batch recipe\'s own code"' : '')+'></td>' +
+    '<td style="width:96px"><input class="cell-input" data-field="supplier" list="supplier-list" value="'+esc(item.supplier||"")+'"></td>' +
     '<td>' +
-      '<div class="unit-toggle os-unit-toggle '+disp.cls+'" data-field="unitType">' +
-        '<button type="button" data-value="weight" class="'+(displayUnitType==="weight"?"active":"")+'">Weight</button>' +
-        '<button type="button" data-value="volume" class="'+(displayUnitType==="volume"?"active":"")+'">Volume</button>' +
-        '<button type="button" data-value="each" class="'+(displayUnitType==="each"?"active":"")+'">Each</button>' +
-        '<button type="button" data-value="auto" class="'+(displayUnitType==="auto"?"active":"")+'">Auto</button>' +
-      '</div>' +
+      // 2.0.0 — one-line drop-down instead of the 2 x 2 buttons (same four choices, same saving: see the "change" handler)
+      '<select class="os-unit-select '+disp.cls+'" data-field="unitType" title="Priced by">' +
+        '<option value="weight"'+(displayUnitType==="weight"?" selected":"")+'>Weight</option>' +
+        '<option value="volume"'+(displayUnitType==="volume"?" selected":"")+'>Volume</option>' +
+        '<option value="each"'+(displayUnitType==="each"?" selected":"")+'>Each</option>' +
+        '<option value="auto"'+(displayUnitType==="auto"?" selected":"")+'>Auto</option>' +
+      '</select>' +
     '</td>' +
     '<td style="width:84px"><span class="price-input-wrap"><input class="cell-input num-in" data-field="price" type="number" step="0.01" min="0" value="'+(item.price==null?"":item.price)+'"'+(batchRecipeForItem(item) ? ' readonly title="Set by the batch recipe \u201c'+esc(batchRecipeForItem(item).name)+'\u201d: it follows the batch cost"' : '')+'></span></td>' +
     '<td style="width:84px">'+ packCell +'</td>' +
@@ -8196,7 +8741,7 @@ function renderItemRow(item){
     '</td>' +
     '<td style="text-align:center"><input type="checkbox" class="price-varies-checkbox" data-field="priceVaries" title="Price varies order to order" '+(item.priceVaries?"checked":"")+'></td>' +
     '<td style="text-align:center"><input type="checkbox" class="order-checkbox" data-field="orderChecked" title="Include this item in this week\'s order" '+(item.orderChecked?"checked":"")+'></td>' +
-    '<td style="width:70px"><input class="cell-input num-in" data-field="orderQty" type="number" step="0.01" min="0" placeholder="0" title="Whole packs, or a partial amount like 0.5" value="'+(item.orderQty==null?"":item.orderQty)+'"></td>' +
+    '<td style="width:60px"><input class="cell-input num-in" data-field="orderQty" type="number" step="0.01" min="0" placeholder="0" title="Whole packs, or a partial amount like 0.5" value="'+(item.orderQty==null?"":item.orderQty)+'"></td>' +
     '<td style="text-align:right;min-width:80px" class="num order-line-total">'+ (itemOrderLineTotal(item)>0 ? money(itemOrderLineTotal(item)) : '<span class="hint">—</span>') +'</td>' +
     '<td><div class="row-actions"><button class="icon-btn" data-action="move-item" title="Move to another sub-heading of this supplier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16M7 4 3 8M7 4l4 4M17 20V4M17 20l-4-4M17 20l4-4"/></svg></button><button class="icon-btn" data-action="delete-item" title="Delete item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td>' +
     '</tr>';
@@ -8297,6 +8842,22 @@ document.getElementById("orders-table-wrap").addEventListener("input", function(
   if(field==="price" || field==="orderQty") renderOrdersSummary();
 });
 document.getElementById("orders-table-wrap").addEventListener("change", function(e){
+  var unitSel = e.target.closest('select[data-field="unitType"]'); // 2.0.0 — the "Priced by" drop-down
+  if(unitSel){
+    var uRow = e.target.closest("tr[data-item-id]");
+    var uItem = uRow && state.items.find(function(i){ return i.id === uRow.dataset.itemId; });
+    if(uItem){
+      uItem.unitType = unitSel.value;
+      uItem.manualUnitType = true; // sticks across future re-imports; see mergeImportedItems
+      if((uItem.unitType==="weight"||uItem.unitType==="volume") && !uItem.packSizeGrams) uItem.packSizeGrams = 1000;
+      persist();
+      renderOrders();
+      // keep the keyboard on the same drop-down after the table redraws
+      var againU = document.querySelector('#orders-table-wrap tr[data-item-id="'+uItem.id+'"] select[data-field="unitType"]');
+      if(againU) againU.focus();
+    }
+    return;
+  }
   var codeIn = e.target.closest('input[data-field="productCode"]');
   if(codeIn && codeIn.classList.contains("code-clash")){
     var cRow = e.target.closest("tr[data-item-id]");
@@ -8315,6 +8876,7 @@ document.getElementById("orders-table-wrap").addEventListener("change", function
     if(!item) return;
     item.orderChecked = cb.checked;
     persist();
+    if(ordersTickedOnly && !item.orderChecked){ renderOrders(); return; } // 2.0.3 — it no longer belongs in the "Ticked only" view
     updateOrderLineTotalCell(row, item);
     renderOrdersSummary();
     if(!item.orderChecked) row.classList.remove("zero-qty-flash");
@@ -8416,6 +8978,17 @@ document.getElementById("orders-search").addEventListener("input", debounce(func
   ordersSearch = e.target.value.trim().toLowerCase();
   renderOrders();
 }, 120));
+// 2.0.3 — "Ticked only": shows just the items ticked to order (a view filter; it changes nothing saved)
+var ordersTickedOnly = false;
+function setOrdersTickedOnly(on){ // sets the filter and its button together (does not redraw)
+  ordersTickedOnly = !!on;
+  var b = document.getElementById("orders-ticked-only");
+  if(b){ b.setAttribute("aria-pressed", ordersTickedOnly ? "true" : "false"); b.classList.toggle("on", ordersTickedOnly); }
+}
+document.getElementById("orders-ticked-only").addEventListener("click", function(){
+  setOrdersTickedOnly(!ordersTickedOnly);
+  renderOrders();
+});
 document.getElementById("orders-supplier-filter").addEventListener("change", function(e){
   ordersSupplierFilter = e.target.value;
   renderOrders();
@@ -8629,7 +9202,7 @@ function renderRecipeEditor(kind){
   var slot = document.getElementById(editorSlotElId(kind));
   var recipe = state.recipes.find(function(r){ return r.id === activeIdGet(kind); });
   if(!recipe){
-    slot.innerHTML = '<div class="recipe-editor"><div class="empty-state"><h3>Select or create a recipe</h3><p>Choose a recipe on the left, or add a new one to start costing it.</p></div></div>';
+    slot.innerHTML = '<div class="recipe-editor"><div class="empty-state v2-empty"><div class="v2-empty-ico" aria-hidden="true"></div><h3>Select or create a recipe</h3><p>Choose a recipe on the left, or add a new one to start costing it.</p><p class="hint">Tip: press <kbd>/</kbd> to search recipes.</p></div></div>';
     return;
   }
   var isMenuItem = kind === "menuitem";
@@ -8668,6 +9241,7 @@ function renderRecipeEditor(kind){
   if(isMenuItem && recipe.completedItemId && recipe.batchCompleteWarning){ // V6.0.6
     html += '<div class="recipe-drift-warning">⚠ '+esc(recipe.batchCompleteWarning)+'</div>';
   }
+  html += '<div class="re-cols"><div class="re-main">'; // 2.0.0 — ingredients and method on the left, the totals beside them
   html += '<textarea class="notes-input" id="recipe-notes-input" placeholder="Method / notes (optional)"'+ro+'>'+esc(recipe.notes||"")+'</textarea>';
 
   html += '<div class="section-label">Ingredients</div>';
@@ -8700,12 +9274,13 @@ function renderRecipeEditor(kind){
       ? ((linkedItemForToggle.unitType==="volume"||linkedItemForToggle.unitType==="each"||linkedItemForToggle.unitType==="auto") ? linkedItemForToggle.unitType : "weight")
       : null;
     var unitCell = linkedItemForToggle
-      ? '<div class="unit-toggle ing-item-unit-toggle" data-field="unitType">' +
-          '<button type="button" data-value="weight" class="'+(linkedDisplayUnitType==="weight"?"active":"")+'"'+d+'>Weight</button>' +
-          '<button type="button" data-value="volume" class="'+(linkedDisplayUnitType==="volume"?"active":"")+'"'+d+'>Volume</button>' +
-          '<button type="button" data-value="each" class="'+(linkedDisplayUnitType==="each"?"active":"")+'"'+d+'>Each</button>' +
-          '<button type="button" data-value="auto" class="'+(linkedDisplayUnitType==="auto"?"active":"")+'"'+d+'>Auto</button>' +
-        '</div>' +
+      // 2.0.4 — the same one-line "Priced by" drop-down as the Order Sheet (saved by onRecipeEditorChange)
+      ? '<select class="os-unit-select ing-item-unit-select '+itemCostDisplay(linkedItemForToggle).cls+'" data-field="unitType" title="Priced by (changes the Order Sheet item too)"'+d+'>' +
+          '<option value="weight"'+(linkedDisplayUnitType==="weight"?" selected":"")+'>Weight</option>' +
+          '<option value="volume"'+(linkedDisplayUnitType==="volume"?" selected":"")+'>Volume</option>' +
+          '<option value="each"'+(linkedDisplayUnitType==="each"?" selected":"")+'>Each</option>' +
+          '<option value="auto"'+(linkedDisplayUnitType==="auto"?" selected":"")+'>Auto</option>' +
+        '</select>' +
         '<span class="hint unit-resolved-hint">'+esc(ingredientUnitLabel(c.unitType, true))+'</span>'
       : ing.itemId
       ? '<span class="hint">'+esc(ingredientUnitLabel(c.unitType, true))+'</span>'
@@ -8716,7 +9291,7 @@ function renderRecipeEditor(kind){
         '</div>';
     html += '<tr data-ing-idx="'+idx+'">' +
       '<td><div class="ing-name-wrap">' +
-        '<input class="cell-input ing-name-input" value="'+esc(displayName)+'" autocomplete="off" placeholder="Search order-sheet items…"'+ro+'>' +
+        '<input class="cell-input ing-name-input" value="'+esc(displayName)+'" title="'+esc(displayName)+'" autocomplete="off" placeholder="Search order-sheet items…"'+ro+'>' +
         '<div class="autocomplete"></div>' +
         (supplierForRow ? '<span class="hint ing-supplier-hint">'+esc(supplierForRow)+'</span>' : '') +
       '</div></td>' +
@@ -8738,6 +9313,7 @@ function renderRecipeEditor(kind){
       '</tr>';
   });
   html += '</tbody><tfoot><tr><td colspan="6"><button class="btn small" id="btn-add-ingredient"'+d+'>+ Add ingredient</button></td></tr></tfoot></table>';
+  html += '</div><div class="re-side">';
 
   if(isMenuItem){
     // Menu Item Recipe deliberately has none of Batch Recipe's VAT/target-%/
@@ -8823,6 +9399,7 @@ function renderRecipeEditor(kind){
     '</div>';
   }
 
+  html += '</div></div>'; // end of .re-side and .re-cols (2.0.0)
   html += '<div class="section-label">Allergens</div>';
   var carried = carriedAllergensOf(recipe); // 6.2.6
   if(Object.keys(carried).length) html += '<div class="hint allergen-carried-note">'+esc(ALLERGEN_CARRIED_NOTE)+'</div>';
@@ -9149,6 +9726,29 @@ var recipeNameBeforeEdit = null; // 6.3.1
 window.addEventListener("beforeunload", function(){ if(window.__testSetupReload) return; try{ decideBatchCodes(); }catch(e){} }); // V6.2.0; 6.2.9 — not while the test app switches to a support zip
 
 function onRecipeEditorChange(e){
+  // 2.0.4 — a linked ingredient's "Priced by" drop-down: changes the Order Sheet item, exactly as its old buttons did
+  var unitSel = e.target.closest && e.target.closest("select.ing-item-unit-select");
+  if(unitSel){
+    var edU = unitSel.closest(".recipe-editor");
+    var rcU = edU && state.recipes.find(function(r){ return r.id === edU.dataset.recipeId; });
+    var rowU = unitSel.closest("tr[data-ing-idx]");
+    var ingU = rcU && rowU ? rcU.ingredients[parseInt(rowU.dataset.ingIdx,10)] : null;
+    var itemU = ingU && ingU.itemId ? state.items.find(function(i){ return i.id === ingU.itemId; }) : null;
+    if(itemU){
+      if(guardTabWrite(recipeType(rcU) === "menuitem" ? "menuitem" : "recipes")){ renderRecipeEditor(recipeType(rcU)); return; }
+      itemU.unitType = unitSel.value;
+      itemU.manualUnitType = true; // sticks across future re-imports; see mergeImportedItems
+      if((itemU.unitType==="weight"||itemU.unitType==="volume") && !itemU.packSizeGrams) itemU.packSizeGrams = 1000;
+      persist();
+      renderRecipeEditor(recipeType(rcU));
+      renderOrders();
+      // keep the keyboard on the same drop-down after the redraw
+      var slotU = document.getElementById(editorSlotElId(recipeType(rcU)));
+      var again = slotU && slotU.querySelector('tr[data-ing-idx="'+rowU.dataset.ingIdx+'"] select.ing-item-unit-select');
+      if(again) again.focus();
+    }
+    return;
+  }
   if(e.target.id === "f-incvat"){ // 6.2.7 — only how the price is typed and shown changes, never the price
     var edEl = e.target.closest(".recipe-editor");
     var rc = edEl && state.recipes.find(function(r){ return r.id === edEl.dataset.recipeId; });
@@ -18576,8 +19176,8 @@ function renderSuppliers(){
     suppliersWithPendingOrder[resolved.trim().toLowerCase()] = true;
   });
   var html = '<table class="ledger"><thead><tr>' +
-    '<th style="min-width:180px">Name</th><th style="min-width:200px">Address</th><th>Ordering method</th><th style="min-width:200px">Email/web</th>' +
-    '<th>Phone</th><th>Account #</th><th style="min-width:200px">Notes / lead time</th><th></th>' +
+    '<th style="min-width:170px">Name</th><th style="min-width:170px">Address</th><th>Ordering method</th><th style="min-width:200px">Email/web</th>' +
+    '<th>Phone</th><th>Account #</th><th style="min-width:170px">Notes / lead time</th><th></th>' + // 2.0.1 — narrower, so the table fits without scrolling sideways
     '</tr></thead><tbody>';
   sorted.forEach(function(s){
     var pendingOrder = !!suppliersWithPendingOrder[(s.name||"").trim().toLowerCase()];
@@ -19400,6 +20000,7 @@ document.getElementById("zero-qty-go-back").addEventListener("click", function()
   // show every item again so the zero rows are definitely on screen
   ordersSearch = "";
   ordersSupplierFilter = "";
+  setOrdersTickedOnly(false); // 2.0.3
   var srch = document.getElementById("orders-search"); if(srch) srch.value = "";
   var tabBtn = document.querySelector('.tab-btn[data-tab="orders"]');
   if(tabBtn) tabBtn.click();
@@ -19420,6 +20021,7 @@ document.getElementById("zero-qty-go-back").addEventListener("click", function()
 });
 
 document.getElementById("order-generation-panel").addEventListener("click", function(e){
+  if(!e.target.closest("button")) return; // 2.0.2 — opening "Items in this order" changes nothing, so it never asks to unlock
   if(guardTabWrite("ordering")) return;
   var zqAcked = zeroQtyAck; zeroQtyAck = false;
   var oneBtn = e.target.closest("#btn-generate-one");
@@ -22493,6 +23095,19 @@ window.addEventListener("focus", applyBackupFlashState);
     session = s; draw();
   });
 
+  // 1.0.7 sign-in fix — what went wrong, for the sign-in box and the error log (never the password or a token)
+  function signInDetail(x, password) {
+    try {
+      if (!x) return "unknown";
+      var msg = String(x.message || "");
+      var s = x.status ? "HTTP " + x.status + (msg && msg !== "HTTP " + x.status ? " \u2014 " + msg : "")
+        : (x.name && x.name !== "Error" ? String(x.name) + ": " : "") + (msg || String(x));
+      if (password) s = s.split(password).join("\u2022\u2022\u2022");          // never the password, even if a server repeats it
+      s = s.replace(/eyJ[\w-]+\.[\w-]+(\.[\w-]+)?/g, "\u2022\u2022\u2022")      // nor anything shaped like a token
+        .replace(/\b(sb_[a-z]+_|token[=:]\s*)[\w.-]+/gi, "$1\u2022\u2022\u2022");
+      return s.slice(0, 300) + (typeof navigator !== "undefined" && navigator.onLine === false ? " (this device says it is offline)" : "");
+    } catch (e) { return "unknown"; }
+  }
   function authCall(grant, body, g) {
     return fetch(URL_BASE + "/auth/v1/token?grant_type=" + grant, {
       method: "POST", headers: { apikey: KEY, "Content-Type": "application/json" }, body: JSON.stringify(body)
@@ -22768,6 +23383,13 @@ window.addEventListener("focus", applyBackupFlashState);
           err.style.color = "#b91c1c";
           err.textContent = x.other ? "This device's ledger is linked to " + x.other + ", so it can't sync with a different account. Sign in with that account."
             : x.status === 400 ? "That email and password didn't match. Check them and try again." : "Couldn't reach the online copy. Check the internet connection and try again.";
+          // 1.0.7 sign-in fix — the technical reason, under the friendly text and in the error log, so a failed sign-in can be diagnosed
+          if (!x.other) {
+            var why = signInDetail(x, form.p.value), small = document.createElement("span");
+            small.style.cssText = "display:block;margin-top:6px;color:#666;font-size:12px;word-break:break-word";
+            small.textContent = "Details: " + why; err.appendChild(small);
+            try { console.error("Online copy sign-in failed: " + why); } catch (e2) {}
+          }
         });
       };
     }
@@ -22798,6 +23420,105 @@ window.addEventListener("focus", applyBackupFlashState);
   var set = function(){ document.documentElement.style.setProperty("--kl-head-h", Math.max(0, bar.getBoundingClientRect().bottom) + "px"); };
   set(); if(typeof ResizeObserver === "function") new ResizeObserver(set).observe(bar);
   window.addEventListener("resize", set); window.addEventListener("scroll", set, { passive: true });
+})();
+</script>
+<script id="v2-layout-script">
+/* 2.0.0 — LAYOUT: tidier toolbars and top bar. It only MOVES existing buttons (same ids, same click
+   handlers, which are all found by id) into a "More" menu, and puts the top-bar buttons in a set order.
+   Nothing is created that saves data. If a menu has nothing showing, its "More" button hides itself. */
+(function(){
+  var CHEVRON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  var DOTS = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+  var open = null, moreCount = 0;
+  function closeOpen(){ if(!open) return; open.menu.hidden = true; open.btn.setAttribute("aria-expanded", "false"); open.wrap.classList.remove("open"); open = null; }
+  document.addEventListener("click", function(e){ if(open && !open.wrap.contains(e.target)) closeOpen(); }, true);
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && open){ var b = open.btn; closeOpen(); b.focus(); } });
+  function shown(el){ return !el.hidden && el.style.display !== "none"; }
+  function moreMenu(ids, place, opts){
+    var items = ids.map(function(id){ return document.getElementById(id); }).filter(Boolean);
+    if(!items.length || !place) return null;
+    var wrap = document.createElement("div"); wrap.className = "v2-more" + (opts.cls ? " " + opts.cls : "");
+    var btn = document.createElement("button"); btn.type = "button"; btn.className = "btn v2-more-btn";
+    btn.setAttribute("aria-expanded", "false");
+    btn.title = opts.title || "More"; btn.innerHTML = opts.icon ? DOTS : ("More " + CHEVRON);
+    if(opts.icon) btn.setAttribute("aria-label", opts.title || "More");
+    var menu = document.createElement("div"); menu.className = "v2-more-menu"; menu.hidden = true;
+    menu.id = "v2-more-" + (++moreCount); btn.setAttribute("aria-controls", menu.id);
+    items.forEach(function(el){ el.classList.add("v2-more-item"); menu.appendChild(el); });
+    wrap.appendChild(btn); wrap.appendChild(menu);
+    place(wrap);
+    var me = { wrap: wrap, btn: btn, menu: menu };
+    btn.addEventListener("click", function(){
+      if(open === me){ closeOpen(); return; }
+      closeOpen(); menu.hidden = false; btn.setAttribute("aria-expanded", "true"); wrap.classList.add("open"); open = me;
+      var first = items.filter(shown)[0]; if(first) first.focus();
+    });
+    menu.addEventListener("click", function(e){ if(e.target.closest(".v2-more-item")) closeOpen(); });
+    wrap.addEventListener("focusout", function(e){ if(open === me && e.relatedTarget && !wrap.contains(e.relatedTarget)) closeOpen(); });
+    function refresh(){ wrap.style.display = items.some(shown) ? "" : "none"; }
+    refresh();
+    if(typeof MutationObserver === "function"){
+      var mo = new MutationObserver(refresh);
+      items.forEach(function(el){ mo.observe(el, { attributes: true, attributeFilter: ["style", "hidden", "class"] }); });
+    }
+    return me;
+  }
+  function before(id){ return function(w){ var ref = document.getElementById(id); if(ref && ref.parentNode) ref.parentNode.insertBefore(w, ref); }; }
+  function atEndOf(sel){ return function(w){ var host = document.querySelector(sel); if(host) host.appendChild(w); }; }
+  try{
+    // Order Sheet: search, filter | More (print stock count) | + Add item
+    moreMenu(["btn-print-stock-count"], before("btn-add-item"), {});
+    var psc = document.getElementById("btn-print-stock-count"); if(psc) psc.style.marginLeft = "";
+    // Ordering: search | More (import past orders)
+    moreMenu(["btn-import-order-history"], atEndOf("#view-ordering > .toolbar"), {});
+    // Suppliers: note, linked-file controls | More (remove empty suppliers) | + Add supplier
+    moreMenu(["btn-remove-empty-suppliers"], before("btn-add-supplier"), {});
+    // Batch Recipe / Menu Item Recipe: the "Update from file…" pickers
+    moreMenu(["menu-backup-update-file-btn"], atEndOf("#view-menuitem > .toolbar"), {});
+    moreMenu(["menu-item-update-file-btn"], atEndOf("#view-recipes > .toolbar"), {});
+    // Top bar: status, checks, links | Undo Redo | Import, Back up now | ⋯ (Restore from backup) | Settings
+    var bar = document.querySelector(".topbar");
+    var ur = document.querySelector(".undo-redo-group");
+    var settings = document.getElementById("btn-settings");
+    if(bar && ur){ ur.classList.add("v2-undo-redo"); bar.appendChild(ur); }
+    ["btn-import", "btn-export"].forEach(function(id){ var b = document.getElementById(id); if(bar && b) bar.appendChild(b); });
+    moreMenu(["btn-restore-backup"], atEndOf(".topbar"), { icon: true, title: "More", cls: "v2-more-top" });
+    if(bar && settings) bar.appendChild(settings);
+    ["btn-undo", "btn-redo"].forEach(function(id){ var b = document.getElementById(id); if(b) b.setAttribute("aria-label", id === "btn-undo" ? "Undo" : "Redo"); });
+    // 2.0.1 — printing shows every past order in full, then puts the folds back as they were
+    var printOpened = [];
+    window.addEventListener("beforeprint", function(){ printOpened = [].slice.call(document.querySelectorAll("details.order-card:not([open])")); printOpened.forEach(function(d){ d.open = true; }); });
+    window.addEventListener("afterprint", function(){ printOpened.forEach(function(d){ d.open = false; }); printOpened = []; });
+    // 2.0.3 — "/" jumps to the search box on the screen you're on (not while typing, not with a pop-up open)
+    document.addEventListener("keydown", function(e){
+      if(e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+      var t = e.target, tag = t && t.tagName;
+      if(tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+      if(document.querySelector(".modal-overlay.open, #health-panel.open")) return;
+      var view = document.querySelector("section.view.active"); if(!view) return;
+      var box = view.querySelector("#orders-search, #ordering-search, .recipe-search-input");
+      if(box && box.offsetParent !== null){ e.preventDefault(); box.focus(); if(box.select) box.select(); }
+    });
+    // 2.0.4 — in the short recipe list (narrow screens) keep the picked recipe in view
+    [].forEach.call(document.querySelectorAll(".recipe-list"), function(list){
+      var keepActiveInView = function(){
+        if(list.scrollHeight <= list.clientHeight) return;
+        var act = list.querySelector(".recipe-card.active"); if(!act) return;
+        var head = list.querySelector(".recipe-list-head"), headH = head ? head.offsetHeight : 0;
+        var lt = list.getBoundingClientRect().top, at = act.getBoundingClientRect().top - lt, ab = at + act.offsetHeight;
+        if(at < headH) list.scrollTop += at - headH; else if(ab > list.clientHeight) list.scrollTop += ab - list.clientHeight;
+      };
+      if(typeof MutationObserver === "function") new MutationObserver(keepActiveInView).observe(list, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+    });
+    // pinned supplier headings sit just under the column headings, whatever height those are
+    var ow = document.getElementById("orders-table-wrap");
+    if(ow){
+      var measure = function(){ var th = ow.querySelector("thead"); if(th) ow.style.setProperty("--v2-thead-h", Math.ceil(th.getBoundingClientRect().height) + "px"); };
+      measure();
+      if(typeof MutationObserver === "function") new MutationObserver(measure).observe(ow, { childList: true });
+      window.addEventListener("resize", measure);
+    }
+  }catch(e){ if(window.console) console.error("2.0.0 layout:", e); }
 })();
 </script>
 </body>
